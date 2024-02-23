@@ -23,8 +23,10 @@ class WolfClient:
     tokens: Tokens or None
     last_access: datetime or None
     last_failed: bool
+    client : httpx.AsyncClient
 
-    def __init__(self, username: str, password: str):
+    def __init__(self, username: str, password: str, client = httpx.AsyncClient()):
+        self.client = client
         self.tokens = None
         self.token_auth = TokenAuth(username, password)
         self.session_id = None
@@ -56,15 +58,12 @@ class WolfClient:
             self.last_failed = False
             return resp.json()
 
-    @staticmethod
-    async def __execute(headers, kwargs, method, path):
-        async with httpx.AsyncClient() as client:
-            return await client.request(method, f"{BASE_URL_PORTAL}/{path}", **dict(kwargs, headers=Headers(headers)))
+    async def __execute(self, headers, kwargs, method, path):
+        return await self.client.request(method, f"{BASE_URL_PORTAL}/{path}", **dict(kwargs, headers=Headers(headers)))
 
     async def __authorize_and_session(self):
-        async with httpx.AsyncClient() as session:
-            self.tokens = await self.token_auth.token(session)
-            self.session_id = await create_session(session, self.tokens.access_token)
+        self.tokens = await self.token_auth.token(self.client)
+        self.session_id = await create_session(self.client, self.tokens.access_token)
 
     # api/portal/GetSystemList
     async def fetch_system_list(self) -> [Device]:

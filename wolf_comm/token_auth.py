@@ -30,7 +30,7 @@ class TokenAuth:
         self.username = username
         self.password = password
 
-    async def token(self, session: AsyncClient) -> Tokens:
+    async def token(self, client: AsyncClient) -> Tokens:
         try:
             # Generate client-sided variables for OpenID
             code_verifier, code_challenge = pkce.generate_pkce_pair()
@@ -38,7 +38,7 @@ class TokenAuth:
         
 
             # Retrieve verification token from WOLF website
-            r = await session.get(constants.AUTHENTICATION_BASE_URL + '/Account/Login?ReturnUrl=/idsrv/connect/authorize/callback?client_id={}&redirect_uri={}/signin-callback.html&response_type=code&scope=openid%2520profile api role&state={}&code_challenge={}&code_challenge_method=S256&response_mode=query&lang=de-DE'.format(constants.AUTHENTICATION_CLIENT, constants.BASE_URL,state, code_challenge))
+            r = await client.get(constants.AUTHENTICATION_BASE_URL + '/Account/Login?ReturnUrl=/idsrv/connect/authorize/callback?client_id={}&redirect_uri={}/signin-callback.html&response_type=code&scope=openid%2520profile api role&state={}&code_challenge={}&code_challenge_method=S256&response_mode=query&lang=de-DE'.format(constants.AUTHENTICATION_CLIENT, constants.BASE_URL,state, code_challenge))
 
             _LOGGER.debug('Verification code response: %s', r.content)
 
@@ -54,7 +54,7 @@ class TokenAuth:
                 "__RequestVerificationToken": verification_token
             }
 
-            r = await session.post(
+            r = await client.post(
                 constants.AUTHENTICATION_BASE_URL + "/Account/Login",
                 params={
                     "ReturnUrl": constants.AUTHENTICATION_URL + "/connect/authorize/callback?client_id={}&redirect_uri={}/signin-callback.html&response_type=code&scope=openid profile api role&state={}&code_challenge={}&code_challenge_method=S256&response_mode=query&lang=de-DE".format(constants.AUTHENTICATION_CLIENT, constants.BASE_URL, state,code_challenge)
@@ -85,7 +85,7 @@ class TokenAuth:
             }
 
             # Get token
-            r = await session.post(
+            r = await client.post(
                 constants.AUTHENTICATION_BASE_URL + "/connect/token",
                 headers=headers,
                 data={
