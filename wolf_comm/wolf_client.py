@@ -23,10 +23,28 @@ class WolfClient:
     tokens: Tokens or None
     last_access: datetime or None
     last_failed: bool
-    client : httpx.AsyncClient
+    
+    
+    @property
+    def client(self):
+        if hasattr(self, '_client') and self._client != None:
+            return self._client
+        elif hasattr(self, '_client_lambda') and self._client_lambda != None:
+            return self._client_lambda()
+        else:
+            raise RuntimeError("No valid client configuration")
+        
 
-    def __init__(self, username: str, password: str, client = httpx.AsyncClient()):
-        self.client = client
+    def __init__(self, username: str, password: str, client = None, client_lambda = None):
+        if client != None and client_lambda != None:
+            raise RuntimeError("Only one of client and client_lambda is allowed!")
+        elif client != None:
+            self._client = client
+        elif client_lambda != None:
+            self._client_lambda = client_lambda
+        else:
+            self._client = httpx.AsyncClient()
+        
         self.tokens = None
         self.token_auth = TokenAuth(username, password)
         self.session_id = None
