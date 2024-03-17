@@ -22,6 +22,9 @@ class Tokens:
         self.refresh_token = refresh_token
         self.expire_date = datetime.datetime.now() + datetime.timedelta(seconds=expires_in)
 
+    def is_expired(self) -> bool:
+        return self.expire_date < datetime.datetime.now()
+
 
 class TokenAuth:
     """Adds poosibility to login with passed credentials"""
@@ -101,6 +104,8 @@ class TokenAuth:
             _LOGGER.debug('Token response: %s', json)
             if "error" in json:
                 raise InvalidAuth
+            # TODO: response doesn't actually include a refresh_token
+            _LOGGER.info('Successfully authenticated')
             return Tokens(json.get("access_token"), json.get("refresh_token"), json.get("expires_in"))
         except:
             raise InvalidAuth
