@@ -4,7 +4,7 @@ File with all constants
 
 BASE_URL = "https://www.wolf-smartset.com"
 
-BASE_URL_PORTAL = "https://www.wolf-smartset.com/portal"
+BASE_URL_PORTAL = BASE_URL + "/portal"
 
 AUTHENTICATION_URL = "/idsrv"
 AUTHENTICATION_BASE_URL = BASE_URL + AUTHENTICATION_URL

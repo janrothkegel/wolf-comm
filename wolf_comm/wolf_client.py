@@ -52,7 +52,8 @@ class WolfClient:
         self.last_failed = False
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
-        await self.__authorize_and_session()
+        if self.tokens is None or self.tokens.is_expired():
+            await self.__authorize_and_session()
 
         headers = kwargs.get('headers')
 
@@ -63,7 +64,8 @@ class WolfClient:
 
         resp = await self.__execute(headers, kwargs, method, path)
         if resp.status_code == 401 or resp.status_code == 500:
-            _LOGGER.debug('Retrying')
+            _LOGGER.info('Retrying failed request (status code %d)',
+                         resp.status_code)
             await self.__authorize_and_session()
             headers = {**bearer_header(self.tokens.access_token), **dict(headers)}
             try:
