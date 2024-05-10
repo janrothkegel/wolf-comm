@@ -23,6 +23,7 @@ class WolfClient:
     tokens: Tokens or None
     last_access: datetime or None
     last_failed: bool
+    last_session_refesh: datetime or None
     
     
     @property
@@ -50,6 +51,7 @@ class WolfClient:
         self.session_id = None
         self.last_access = None
         self.last_failed = False
+        self.last_session_refesh = None
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
         if self.tokens is None or self.tokens.is_expired():
@@ -62,7 +64,9 @@ class WolfClient:
         else:
             headers = {**bearer_header(self.tokens.access_token), **dict(headers)}
 
-        await update_session(self.client, self.tokens.access_token, self.session_id)
+        if self.last_session_refesh is None or self.last_session_refesh <= datetime.datetime.now():
+            await update_session(self.client, self.tokens.access_token, self.session_id)
+            self.last_session_refesh = datetime.datetime.now() + datetime.timedelta(seconds=60)
         
         resp = await self.__execute(headers, kwargs, method, path)
         if resp.status_code == 401 or resp.status_code == 500:
