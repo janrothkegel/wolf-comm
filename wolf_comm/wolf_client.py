@@ -8,7 +8,7 @@ from httpx import Headers
 from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, \
-    LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE
+    LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES
 from wolf_comm.create_session import create_session, update_session
 from wolf_comm.helpers import bearer_header
 from wolf_comm.models import Temperature, Parameter, SimpleParameter, Device, Pressure, ListItemParameter, \
@@ -154,6 +154,29 @@ class WolfClient:
         self.last_access = res[LAST_ACCESS]
         return [Value(v[VALUE_ID], v[VALUE], v[STATE]) for v in res[VALUES] if VALUE in v]
 
+# api/portal/WriteParameterValues
+    async def write_value(self, gateway_id, system_id, parameters: [Parameter]):
+        data = {
+            WRITE_PARAMETER_VALUES: [{"ValueId": 22003400000,"Value": "0","ParameterName": "Partymodus"}],
+            SYSTEM_ID: system_id,
+            GATEWAY_ID: gateway_id,
+            BUNDLE_ID: 3500,
+            SESSION_ID: self.session_id
+        }
+        res = await self.__request('post', 'api/portal/WriteParameterValues', json=data,
+                                   headers={"Content-Type": "application/json"})
+
+        _LOGGER.debug('Written values: %s', res)
+
+        if ERROR_CODE in res or ERROR_TYPE in res:
+            if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
+                raise ParameterWriteError(res)
+            raise WriteFailed(res)
+
+        self.last_access = res[LAST_ACCESS]
+        
+
+
     @staticmethod
     def _map_parameter(parameter: dict, parent: str) -> Parameter:
         value_id = parameter[VALUE_ID]
@@ -195,5 +218,13 @@ class FetchFailed(Exception):
     pass
 
 class ParameterReadError(Exception):
+    """Server returned RedParameterValues error"""
+    pass
+
+class WriteFailed(Exception):
+    """Server returned 500 code with message while executing query"""
+    pass
+
+class ParameterWriteError(Exception):
     """Server returned RedParameterValues error"""
     pass

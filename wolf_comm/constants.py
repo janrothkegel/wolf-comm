@@ -77,3 +77,5 @@ SYSTEM_LIST = 'SystemList'
 GATEWAY_STATE = 'GatewayState'
 
 IS_ONLINE = 'IsOnline'
+
+WRITE_PARAMETER_VALUES = 'WriteParameterValues'
