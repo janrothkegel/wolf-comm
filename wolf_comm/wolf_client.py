@@ -67,6 +67,7 @@ class WolfClient:
         if self.last_session_refesh is None or self.last_session_refesh <= datetime.datetime.now():
             await update_session(self.client, self.tokens.access_token, self.session_id)
             self.last_session_refesh = datetime.datetime.now() + datetime.timedelta(seconds=60)
+            _LOGGER.debug('Sessionid: %s extented', self.session_id)
         
         resp = await self.__execute(headers, kwargs, method, path)
         if resp.status_code == 401 or resp.status_code == 500:
