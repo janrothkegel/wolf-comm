@@ -91,6 +91,7 @@ class WolfClient:
     async def __authorize_and_session(self):
         self.tokens = await self.token_auth.token(self.client)
         self.session_id = await create_session(self.client, self.tokens.access_token)
+        self.last_session_refesh = datetime.datetime.now() + datetime.timedelta(seconds=60)
 
     # api/portal/GetSystemList
     async def fetch_system_list(self) -> [Device]:
