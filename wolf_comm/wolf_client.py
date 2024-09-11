@@ -94,7 +94,7 @@ class WolfClient:
         self.last_session_refesh = datetime.datetime.now() + datetime.timedelta(seconds=60)
 
     # api/portal/GetSystemList
-    async def fetch_system_list(self) -> [Device]:
+    async def fetch_system_list(self) -> list[Device]:
         system_list = await self.__request('get', 'api/portal/GetSystemList')
         _LOGGER.debug('Fetched systems: %s', system_list)
         return [Device(system[ID], system[GATEWAY_ID], system[NAME]) for system in system_list]
@@ -108,7 +108,7 @@ class WolfClient:
 
 
     # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
-    async def fetch_parameters(self, gateway_id, system_id) -> [Parameter]:
+    async def fetch_parameters(self, gateway_id, system_id) -> list[Parameter]:
         payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
         desc = await self.__request('get', 'api/portal/GetGuiDescriptionForGateway', params=payload)
         _LOGGER.debug('Fetched parameters: %s', desc)
@@ -136,7 +136,7 @@ class WolfClient:
         _LOGGER.debug('Close system response: %s', res)
 
     # api/portal/GetParameterValues
-    async def fetch_value(self, gateway_id, system_id, parameters: [Parameter]):
+    async def fetch_value(self, gateway_id, system_id, parameters: list[Parameter]):
         data = {
             BUNDLE_ID: 1000,
             BUNDLE: False,
