@@ -1,12 +1,15 @@
 import datetime
+import json
+import logging
+import re
 from typing import Union
 
+import aiohttp
 import httpx
-import logging
 from httpx import Headers
 
 from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
-    BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
+    BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, \
     LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE
 from wolf_comm.create_session import create_session, update_session
@@ -16,7 +19,7 @@ from wolf_comm.models import Temperature, Parameter, SimpleParameter, Device, Pr
 from wolf_comm.token_auth import Tokens, TokenAuth
 
 _LOGGER = logging.getLogger(__name__)
-
+SPLIT = '---'
 
 class WolfClient:
     session_id: int or None
@@ -24,8 +27,8 @@ class WolfClient:
     last_access: datetime or None
     last_failed: bool
     last_session_refesh: datetime or None
-    
-    
+    language: dict or None
+
     @property
     def client(self):
         if hasattr(self, '_client') and self._client != None:
@@ -34,9 +37,8 @@ class WolfClient:
             return self._client_lambda()
         else:
             raise RuntimeError("No valid client configuration")
-        
 
-    def __init__(self, username: str, password: str, client = None, client_lambda = None):
+    def __init__(self, username: str, password: str, client=None, client_lambda=None):
         if client != None and client_lambda != None:
             raise RuntimeError("Only one of client and client_lambda is allowed!")
         elif client != None:
@@ -45,7 +47,7 @@ class WolfClient:
             self._client_lambda = client_lambda
         else:
             self._client = httpx.AsyncClient()
-        
+
         self.tokens = None
         self.token_auth = TokenAuth(username, password)
         self.session_id = None
@@ -68,7 +70,7 @@ class WolfClient:
             await update_session(self.client, self.tokens.access_token, self.session_id)
             self.last_session_refesh = datetime.datetime.now() + datetime.timedelta(seconds=60)
             _LOGGER.debug('Sessionid: %s extented', self.session_id)
-        
+
         resp = await self.__execute(headers, kwargs, method, path)
         if resp.status_code == 401 or resp.status_code == 500:
             _LOGGER.info('Retrying failed request (status code %d)',
@@ -106,26 +108,38 @@ class WolfClient:
         _LOGGER.debug('Fetched system state: %s', system_state_response)
         return system_state_response[0][GATEWAY_STATE][IS_ONLINE]
 
-
     # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
     async def fetch_parameters(self, gateway_id, system_id) -> list[Parameter]:
         payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
         desc = await self.__request('get', 'api/portal/GetGuiDescriptionForGateway', params=payload)
-        _LOGGER.debug('Fetched parameters: %s', desc)
         tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
+
         result = [WolfClient._map_view(view) for view in tab_views]
 
         result.reverse()
         distinct_ids = []
         flattened = []
         for sublist in result:
-            distinct_names = []
             for val in sublist:
-                if val.value_id not in distinct_ids and val.name not in distinct_names:
+                spaceSplit = val.name.split(SPLIT, 2)
+                if len(spaceSplit) == 2:
+                    key = spaceSplit[0].split('_')[1] if spaceSplit[0].count('_') > 0 else spaceSplit[0]
+                    name = self.replace_with_localized_text(key) + ' ' + self.replace_with_localized_text(spaceSplit[1])
+                    val.name = name
+                else:
+                    val.name = self.replace_with_localized_text(val.name)
+
+                if val.value_id not in distinct_ids:
                     distinct_ids.append(val.value_id)
-                    distinct_names.append(val.name)
                     flattened.append(val)
+                else:
+                    _LOGGER.debug('Skipping parameter with id %s and name %s', val.value_id, name)
         return flattened
+
+    def replace_with_localized_text(self, text: str):
+        if self.language is not None and text in self.language:
+            return self.language[text]
+        return text
 
     # api/portal/CloseSystem
     async def close_system(self):
@@ -134,6 +148,54 @@ class WolfClient:
         }
         res = await self.__request('post', 'api/portal/CloseSystem', json=data)
         _LOGGER.debug('Close system response: %s', res)
+
+    @staticmethod
+    def extract_messages_json(text):
+        json_match = re.search(r'messages:\s*({.*?})\s*}', text, re.DOTALL)
+
+        if json_match:
+            json_string = json_match.group(1)
+            return WolfClient.try_and_parse(json_string, 1000)
+        else:
+            return None
+
+    @staticmethod
+    def try_and_parse(text, times):
+        if times == 0:
+            return text
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as e:
+            line = e.lineno - 1
+
+            text_lines = text.split('\n')
+
+            if line < len(text_lines):
+                text_lines.pop(line)
+
+            new_text = '\n'.join(text_lines)
+            return WolfClient.try_and_parse(new_text, times - 1)
+
+    @staticmethod
+    async def fetch_localized_text(language: str):
+        url = f'https://www.wolf-smartset.com/js/localized-text/text.culture.{language}.js'
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200 or response.status == 304:
+                    return await response.text()
+                else:
+                    return ""
+
+    async def load_localized_json(self, language_input: str):
+        res = await self.fetch_localized_text(language_input)
+
+        parsed_json = WolfClient.extract_messages_json(res)
+
+        if parsed_json is not None:
+            self.language = parsed_json
+        else:
+            _LOGGER.error('Failed to parse localized text for language: %s', language_input)
 
     # api/portal/GetParameterValues
     async def fetch_value(self, gateway_id, system_id, parameters: list[Parameter]):
@@ -150,8 +212,6 @@ class WolfClient:
         res = await self.__request('post', 'api/portal/GetParameterValues', json=data,
                                    headers={"Content-Type": "application/json"})
 
-        _LOGGER.debug('Fetched values: %s', res)
-
         if ERROR_CODE in res or ERROR_TYPE in res:
             if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
                 raise ParameterReadError(res)
@@ -162,8 +222,11 @@ class WolfClient:
 
     @staticmethod
     def _map_parameter(parameter: dict, parent: str) -> Parameter:
+        group = ""
+        if GROUP in parameter:
+            group = parameter[GROUP] + SPLIT
         value_id = parameter[VALUE_ID]
-        name = parameter[NAME]
+        name = group + parameter[NAME]
         parameter_id = parameter[PARAMETER_ID]
         if UNIT in parameter:
             unit = parameter[UNIT]
@@ -199,6 +262,7 @@ class WolfClient:
 class FetchFailed(Exception):
     """Server returned 500 code with message while executing query"""
     pass
+
 
 class ParameterReadError(Exception):
     """Server returned RedParameterValues error"""
