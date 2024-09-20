@@ -72,6 +72,8 @@ TAB_NAME = 'TabName'
 
 VALUE_ID = 'ValueId'
 
+GROUP = 'Group'
+
 SYSTEM_LIST = 'SystemList'
 
 GATEWAY_STATE = 'GatewayState'
