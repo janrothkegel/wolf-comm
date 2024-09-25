@@ -221,12 +221,11 @@ class WolfClient:
         return [Value(v[VALUE_ID], v[VALUE], v[STATE]) for v in res[VALUES] if VALUE in v]
 
 # api/portal/WriteParameterValues
-    async def write_value(self, gateway_id, system_id, parameters: [Parameter]):
+    async def write_value(self, gateway_id, system_id, Value):
         data = {
-            WRITE_PARAMETER_VALUES: [{"ValueId": 22003400000,"Value": "0","ParameterName": "Partymodus"}],
+            WRITE_PARAMETER_VALUES: [{"ValueId": Value[VALUE_ID],"Value": Value[STATE]}],
             SYSTEM_ID: system_id,
             GATEWAY_ID: gateway_id,
-            BUNDLE_ID: 3500,
             SESSION_ID: self.session_id
         }
         res = await self.__request('post', 'api/portal/WriteParameterValues', json=data,
