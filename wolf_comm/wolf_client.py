@@ -112,6 +112,7 @@ class WolfClient:
     async def fetch_parameters(self, gateway_id, system_id) -> list[Parameter]:
         payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
         desc = await self.__request('get', 'api/portal/GetGuiDescriptionForGateway', params=payload)
+        _LOGGER.debug('Fetched parameters: %s', desc)
         tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
 
         result = [WolfClient._map_view(view) for view in tab_views]
