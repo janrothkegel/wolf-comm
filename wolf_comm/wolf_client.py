@@ -28,6 +28,7 @@ class WolfClient:
     last_failed: bool
     last_session_refesh: datetime or None
     language: dict or None
+    l_choice: str
 
     @property
     def client(self):
@@ -38,7 +39,7 @@ class WolfClient:
         else:
             raise RuntimeError("No valid client configuration")
 
-    def __init__(self, username: str, password: str, client=None, client_lambda=None):
+    def __init__(self, username: str, password: str, lang: str, client=None, client_lambda=None):
         if client != None and client_lambda != None:
             raise RuntimeError("Only one of client and client_lambda is allowed!")
         elif client != None:
@@ -54,7 +55,11 @@ class WolfClient:
         self.last_access = None
         self.last_failed = False
         self.last_session_refesh = None
-        self.language = 'en'
+        self.language = None
+        
+        if lang is None or lang=='':
+           self.l_choice = 'en'
+    
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
         if self.tokens is None or self.tokens.is_expired():
@@ -136,8 +141,26 @@ class WolfClient:
                     flattened.append(val)
                 else:
                     _LOGGER.debug('Skipping parameter with id %s and name %s', val.value_id, name)
+        flattened = self.fix_duplicated_parameters(flattened)
         return flattened
 
+    def fix_duplicated_parameters(parameters):
+       """Fix duplicated parameters."""
+       seen = set()
+       new_parameters = []
+       for parameter in parameters:
+          if parameter.name not in seen:
+              new_parameters.append(parameter)
+              seen.add(parameter.name)
+              _LOGGER.debug("Adding parameter: %s", parameter.name)
+          else:
+                _LOGGER.debug(
+                "Duplicated parameter found: %s. Skipping this parameter",
+                parameter.name,
+            )
+       return new_parameters
+    
+    
     def replace_with_localized_text(self, text: str):
         if self.language is not None and text in self.language:
             return self.language[text]
