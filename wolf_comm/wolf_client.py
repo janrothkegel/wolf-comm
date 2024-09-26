@@ -54,6 +54,7 @@ class WolfClient:
         self.last_access = None
         self.last_failed = False
         self.last_session_refesh = None
+        self.language = 'en'
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
         if self.tokens is None or self.tokens.is_expired():
