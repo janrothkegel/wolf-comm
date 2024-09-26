@@ -58,9 +58,9 @@ class WolfClient:
         self.language = None
         
         if lang is None:
-           lang = 'en'
-        
-        self.load_localized_json(lang)
+            self.l_choice = 'en'
+        else:
+            self.l_choice = lang
     
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
@@ -118,6 +118,7 @@ class WolfClient:
 
     # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
     async def fetch_parameters(self, gateway_id, system_id) -> list[Parameter]:
+        await self.load_localized_json(self.l_choice)
         payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
         desc = await self.__request('get', 'api/portal/GetGuiDescriptionForGateway', params=payload)
         _LOGGER.debug('Fetched parameters: %s', desc)
