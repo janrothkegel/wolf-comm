@@ -39,7 +39,7 @@ class WolfClient:
         else:
             raise RuntimeError("No valid client configuration")
 
-    def __init__(self, username: str, password: str, lang: str, client=None, client_lambda=None):
+    def __init__(self, username: str, password: str, lang=None, client=None, client_lambda=None):
         if client != None and client_lambda != None:
             raise RuntimeError("Only one of client and client_lambda is allowed!")
         elif client != None:
@@ -57,8 +57,10 @@ class WolfClient:
         self.last_session_refesh = None
         self.language = None
         
-        if lang is None or lang=='':
-           self.l_choice = 'en'
+        if lang is None:
+           lang = 'en'
+        
+        self.load_localized_json(lang)
     
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
