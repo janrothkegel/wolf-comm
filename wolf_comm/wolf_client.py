@@ -143,10 +143,10 @@ class WolfClient:
                     flattened.append(val)
                 else:
                     _LOGGER.debug('Skipping parameter with id %s and name %s', val.value_id, name)
-        flattened = self.fix_duplicated_parameters(flattened)
-        return flattened
+        flattened_fixed = self.fix_duplicated_parameters(flattened)
+        return flattened_fixed
 
-    def fix_duplicated_parameters(parameters):
+    def fix_duplicated_parameters(self, parameters):
        """Fix duplicated parameters."""
        seen = set()
        new_parameters = []
