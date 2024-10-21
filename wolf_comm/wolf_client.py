@@ -265,14 +265,13 @@ class WolfClient:
 
         _LOGGER.debug('Written values: %s', res)
 
-        # Überprüfen, ob LAST_ACCESS in der Antwort vorhanden ist, bevor darauf zugegriffen wird
-        if LAST_ACCESS in res:
-            self.last_access = res[LAST_ACCESS]
-
         if ERROR_CODE in res or ERROR_TYPE in res:
             if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
                 raise ParameterWriteError(res)
             raise WriteFailed(res)
+
+        if LAST_ACCESS in res:
+            self.last_access = res[LAST_ACCESS]
 
         return res
 
