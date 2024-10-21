@@ -79,6 +79,10 @@ class WolfClient:
             self.last_session_refesh = datetime.datetime.now() + datetime.timedelta(seconds=60)
             _LOGGER.debug('Sessionid: %s extented', self.session_id)
 
+        if 'json' in kwargs and self.session_id is not None:
+            if isinstance(kwargs['json'], dict):  # Check if json is a dict
+                kwargs['json'][SESSION_ID] = self.session_id  # add sessionId to json-object
+
         resp = await self.__execute(headers, kwargs, method, path)
         if resp.status_code == 401 or resp.status_code == 500:
             _LOGGER.info('Retrying failed request (status code %d)',
@@ -251,23 +255,26 @@ class WolfClient:
 # api/portal/WriteParameterValues
     async def write_value(self, gateway_id, system_id, Value):
         data = {
-            WRITE_PARAMETER_VALUES: [{"ValueId": Value[VALUE_ID],"Value": Value[STATE]}],
+            WRITE_PARAMETER_VALUES: [{"ValueId": Value[VALUE_ID], "Value": Value[STATE]}],
             SYSTEM_ID: system_id,
             GATEWAY_ID: gateway_id,
-            SESSION_ID: self.session_id
         }
+
         res = await self.__request('post', 'api/portal/WriteParameterValues', json=data,
                                    headers={"Content-Type": "application/json"})
 
         _LOGGER.debug('Written values: %s', res)
+
+        # Überprüfen, ob LAST_ACCESS in der Antwort vorhanden ist, bevor darauf zugegriffen wird
+        if LAST_ACCESS in res:
+            self.last_access = res[LAST_ACCESS]
 
         if ERROR_CODE in res or ERROR_TYPE in res:
             if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
                 raise ParameterWriteError(res)
             raise WriteFailed(res)
 
-        self.last_access = res[LAST_ACCESS]
-        
+        return res
 
 
     @staticmethod
