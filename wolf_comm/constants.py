@@ -28,6 +28,8 @@ TAB_VIEWS = 'TabViews'
 
 MENU_ITEMS = 'MenuItems'
 
+SUB_MENU_ENTRIES = 'SubMenuEntries'
+
 GATEWAY_ID = "GatewayId"
 
 LAST_ACCESS = "LastAccess"

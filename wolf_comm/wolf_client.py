@@ -8,7 +8,7 @@ import aiohttp
 import httpx
 from httpx import Headers
 
-from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
+from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, SUB_MENU_ENTRIES, TAB_VIEWS, BUNDLE_ID, \
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, \
     LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES
@@ -123,12 +123,18 @@ class WolfClient:
     # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
     async def fetch_parameters(self, gateway_id, system_id) -> list[Parameter]:
         await self.load_localized_json(self.l_choice)
+
         payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
         desc = await self.__request('get', 'api/portal/GetGuiDescriptionForGateway', params=payload)
         _LOGGER.debug('Fetched parameters: %s', desc)
         tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
 
         result = [WolfClient._map_view(view) for view in tab_views]
+
+	# Expert results if available
+        if len(desc[MENU_ITEMS]) > 1 and SUB_MENU_ENTRIES in desc[MENU_ITEMS][1]: 
+            for expert_submenu in desc[MENU_ITEMS][1][SUB_MENU_ENTRIES]:
+                result += [WolfClient._map_view(view) for view in expert_submenu[TAB_VIEWS]]
 
         result.reverse()
         distinct_ids = []
