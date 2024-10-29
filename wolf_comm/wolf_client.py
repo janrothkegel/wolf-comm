@@ -8,14 +8,14 @@ import aiohttp
 import httpx
 from httpx import Headers
 
-from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
+from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, SUB_MENU_ENTRIES, TAB_VIEWS, BUNDLE_ID, \
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
-    CELSIUS_TEMPERATURE, BAR, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, \
+    CELSIUS_TEMPERATURE, BAR, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
     LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES
 from wolf_comm.create_session import create_session, update_session
 from wolf_comm.helpers import bearer_header
 from wolf_comm.models import Temperature, Parameter, SimpleParameter, Device, Pressure, ListItemParameter, \
-    PercentageParameter, Value, ListItem, HoursParameter
+    PercentageParameter, Value, ListItem, HoursParameter, PowerParameter, EnergyParameter
 from wolf_comm.token_auth import Tokens, TokenAuth
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,6 +121,22 @@ class WolfClient:
         return system_state_response[0][GATEWAY_STATE][IS_ONLINE]
 
     # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
+    async def fetch_parameters_v2(self, gateway_id, system_id) -> list[Parameter]:
+        payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
+        answer = await self.__request('get', 'api/portal/GetGuiDescriptionForGateway', params=payload)
+        _LOGGER.debug('Fetched parameters: %s', answer)
+
+        descriptors = WolfClient._extract_parameter_descriptors(answer)
+        _LOGGER.debug('Found parameter descriptors: %s', len(descriptors))
+
+        mapped = [WolfClient._map_parameter(p, None) for p in descriptors]
+
+        deduplicated  = self.fix_duplicated_parameters(mapped)
+        _LOGGER.debug('Deduplicated descriptors: %s', len(deduplicated))
+
+        return deduplicated
+
+    # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
     async def fetch_parameters(self, gateway_id, system_id) -> list[Parameter]:
         await self.load_localized_json(self.l_choice)
         payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
@@ -129,7 +145,6 @@ class WolfClient:
         tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
 
         result = [WolfClient._map_view(view) for view in tab_views]
-
         result.reverse()
         distinct_ids = []
         flattened = []
@@ -280,10 +295,15 @@ class WolfClient:
     def _map_parameter(parameter: dict, parent: str) -> Parameter:
         group = ""
         if GROUP in parameter:
-            group = parameter[GROUP] + SPLIT
+            group = parameter[GROUP].replace(" ","_")
+            
         value_id = parameter[VALUE_ID]
-        name = group + parameter[NAME]
+        name = group + "_" + parameter[NAME].replace(" ","_") 
         parameter_id = parameter[PARAMETER_ID]
+
+        if not parent: 
+            parent = group
+
         if UNIT in parameter:
             unit = parameter[UNIT]
             if unit == CELSIUS_TEMPERATURE:
@@ -294,6 +314,10 @@ class WolfClient:
                 return PercentageParameter(value_id, name, parent, parameter_id)
             elif unit == HOUR:
                 return HoursParameter(value_id, name, parent, parameter_id)
+            elif unit == KILOWATT:
+                return PowerParameter(value_id, name, parent, parameter_id)
+            elif unit == KILOWATTHOURS:
+                return EnergyParameter(value_id, name, parent, parameter_id)
         elif LIST_ITEMS in parameter:
             items = [ListItem(list_item[VALUE], list_item[DISPLAY_TEXT]) for list_item in parameter[LIST_ITEMS]]
             return ListItemParameter(value_id, name, parent, items, parameter_id)
@@ -313,6 +337,27 @@ class WolfClient:
             return new_params
         else:
             return [WolfClient._map_parameter(p, view[TAB_NAME]) for p in view[PARAMETER_DESCRIPTORS]]
+
+    @staticmethod
+    def _extract_parameter_descriptors(desc):
+        # recursively traverses datastructure returned by GetGuiDescriptionForGateway API and extracts all ParameterDescriptors arrays
+        def traverse(item, path=''):
+            # Object is a dict, crawl keys
+            if type(item) is dict:
+                for key in item:
+                    if key == "ParameterDescriptors":
+                        _LOGGER.debug('Found ParameterDescriptors at path: %s', path)
+                        yield from item[key]
+                    yield from traverse(item[key], path + key + '>')
+
+            # Object is a list, crawl list items
+            elif type(item) is list:
+                i = 0
+                for a in item:
+                    yield from traverse(a, path + str(i) + '>')
+                    i += 1
+        return list(traverse(desc))
+
 
 
 class FetchFailed(Exception):
