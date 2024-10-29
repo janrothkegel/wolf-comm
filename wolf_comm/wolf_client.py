@@ -132,9 +132,9 @@ class WolfClient:
         mapped = [WolfClient._map_parameter(p, None) for p in descriptors]
 
         deduplicated  = self.fix_duplicated_parameters(mapped)
-        _LOGGER.debug('Deduplicated descriptors: %s', len(fixed))
+        _LOGGER.debug('Deduplicated descriptors: %s', len(deduplicated))
 
-        return fixed
+        return deduplicated
 
     # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
     async def fetch_parameters(self, gateway_id, system_id) -> list[Parameter]:
