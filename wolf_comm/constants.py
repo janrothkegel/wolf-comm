@@ -50,6 +50,10 @@ PERCENTAGE = '%'
 
 HOUR = 'Std'
 
+KILOWATT = 'kW'
+
+KILOWATTHOURS = 'kWh'
+
 BAR = 'bar'
 
 CELSIUS_TEMPERATURE = '°C'
