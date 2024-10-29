@@ -295,14 +295,11 @@ class WolfClient:
     def _map_parameter(parameter: dict, parent: str) -> Parameter:
         group = ""
         if GROUP in parameter:
-            group = parameter[GROUP].replace(" ","_")
+            group = parameter[GROUP] + SPLIT
             
         value_id = parameter[VALUE_ID]
-        name = group + "_" + parameter[NAME].replace(" ","_") 
+        name = group + parameter[NAME]
         parameter_id = parameter[PARAMETER_ID]
-
-        if not parent: 
-            parent = group
 
         if UNIT in parameter:
             unit = parameter[UNIT]
