@@ -121,18 +121,43 @@ class WolfClient:
         return system_state_response[0][GATEWAY_STATE][IS_ONLINE]
 
     # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
-    async def fetch_parameters_v2(self, gateway_id, system_id) -> list[Parameter]:
+    # dumps API response for GetGuiDescriptionForGateway to JSON file for local testin and troubleshooting without hitting API limits
+    async def dump_fetch_parameters(self, gateway_id, system_id, path):
         payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
         answer = await self.__request('get', 'api/portal/GetGuiDescriptionForGateway', params=payload)
-        _LOGGER.debug('Fetched parameters: %s', answer)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(answer, f, ensure_ascii=False, indent=4)
 
-        descriptors = WolfClient._extract_parameter_descriptors(answer)
-        _LOGGER.debug('Found parameter descriptors: %s', len(descriptors))
+
+    async def fetch_parameters_v2(self, gateway_id, system_id, localJsonDump = None) -> list[Parameter]:
+        res = None
+        # For local testing
+        try: 
+            if localJsonDump is not None: 
+                with open(localJsonDump) as f:
+                    res = json.load(f)
+                    _LOGGER.debug('Using local dump instead of hitting API!')
+        except: 
+            _LOGGER.debug('Unable to use local dump, asking API!')
+        finally: 
+            if res is None: 
+                payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
+                res = await self.__request('get', 'api/portal/GetGuiDescriptionForGateway', params=payload)
+
+                if localJsonDump is not None: 
+                    _LOGGER.debug('Saving response as local dump')
+                    with open(localJsonDump, 'w', encoding='utf-8') as f:
+                        json.dump(res, f, ensure_ascii=False, indent=4)
+
+        _LOGGER.debug('Fetched parameters: %s', res)
+
+        descriptors = WolfClient._extract_parameter_descriptors(res)
+	# Sort descriptors by ValueId for easier duplicate debugging
+        descriptors.sort(key=lambda x: x['ValueId'])
 
         mapped = [WolfClient._map_parameter(p, None) for p in descriptors]
 
         deduplicated  = self.fix_duplicated_parameters(mapped)
-        _LOGGER.debug('Deduplicated descriptors: %s', len(deduplicated))
 
         return deduplicated
 
@@ -170,16 +195,23 @@ class WolfClient:
        """Fix duplicated parameters."""
        seen = set()
        new_parameters = []
+       duplicate_parameters = []
        for parameter in parameters:
-          if parameter.name not in seen:
+          if parameter.value_id not in seen:
               new_parameters.append(parameter)
-              seen.add(parameter.name)
-              _LOGGER.debug("Adding parameter: %s", parameter.name)
+              seen.add(parameter.value_id)
           else:
-                _LOGGER.debug(
-                "Duplicated parameter found: %s. Skipping this parameter",
-                parameter.name,
-            )
+              duplicate_parameters.append(parameter)
+
+       for param in duplicate_parameters: 
+           _LOGGER.debug("duplicate parameter: %s %s > %s", param.value_id, param.name, param.parent)
+       _LOGGER.debug("duplictates: %s", len(duplicate_parameters))
+      
+       for param in new_parameters: 
+           _LOGGER.debug("kept parameter: %s %s > %s", param.value_id, param.name, param.parent)
+       _LOGGER.debug("kept: %s", len(new_parameters))
+
+      
        return new_parameters
     
     
@@ -245,27 +277,49 @@ class WolfClient:
             _LOGGER.error('Failed to parse localized text for language: %s', language_input)
 
     # api/portal/GetParameterValues
-    async def fetch_value(self, gateway_id, system_id, parameters: list[Parameter]):
-        data = {
-            BUNDLE_ID: 1000,
-            BUNDLE: False,
-            VALUE_ID_LIST: [param.value_id for param in parameters],
-            GATEWAY_ID: gateway_id,
-            SYSTEM_ID: system_id,
-            GUI_ID_CHANGED: False,
-            SESSION_ID: self.session_id,
-            LAST_ACCESS: self.last_access
-        }
-        res = await self.__request('post', 'api/portal/GetParameterValues', json=data,
-                                   headers={"Content-Type": "application/json"})
+    async def fetch_value(self, gateway_id, system_id, parameters: list[Parameter], localJsonDump = None):
+        res = None
 
-        if ERROR_CODE in res or ERROR_TYPE in res:
-            if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
-                raise ParameterReadError(res)
-            raise FetchFailed(res)
+        # For local testing
+        try:
+            if localJsonDump is not None: 
+                with open(localJsonDump) as f: 
+                    res = json.load(f)
+                    _LOGGER.debug('Using local dump instead of hitting API!')
+        except: 
+            _LOGGER.debug('Unable to use local dump, asking API!')
+        finally: 
+            if res is None:
+                data = { 
+                    BUNDLE_ID: 1000,
+                    BUNDLE: False,
+                    VALUE_ID_LIST: [param.value_id for param in parameters],
+                    GATEWAY_ID: gateway_id,
+                    SYSTEM_ID: system_id,
+                    GUI_ID_CHANGED: False,
+                    SESSION_ID: self.session_id,
+                    LAST_ACCESS: self.last_access
+                }
+                #_LOGGER.debug('Doing expert login') 
+                #expert = await self.__request('get', 'api/portal/ExpertLogin', params={'Password': 1111})
+                #_LOGGER.debug('Expert response: %s', expert)
+ 
+                res = await self.__request('post', 'api/portal/GetParameterValues', json=data, headers={"Content-Type": "application/json"})
+
+                if ERROR_CODE in res or ERROR_TYPE in res:
+                    if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
+                        raise ParameterReadError(res)
+                    raise FetchFailed(res)
+
+                if localJsonDump is not None: 
+                    _LOGGER.debug('Saving response as local dump')
+                    with open(localJsonDump, 'w', encoding='utf-8') as f:
+                        json.dump(res, f, ensure_ascii=False, indent=4)
 
         self.last_access = res[LAST_ACCESS]
-        return [Value(v[VALUE_ID], v[VALUE], v[STATE]) for v in res[VALUES] if VALUE in v]
+        _LOGGER.debug('requested values for %s parameters, got values for %s ', len(parameters), len(res[VALUES]))
+        
+        return [Value(v[VALUE_ID], v[VALUE] if VALUE in v else None, v[STATE]) for v in res[VALUES] ]
 
 # api/portal/WriteParameterValues
     async def write_value(self, gateway_id, system_id, Value):
@@ -298,7 +352,7 @@ class WolfClient:
             group = parameter[GROUP].replace(" ","_")
             
         value_id = parameter[VALUE_ID]
-        name = group + "_" + parameter[NAME].replace(" ","_") 
+        name = parameter[NAME]
         parameter_id = parameter[PARAMETER_ID]
 
         if not parent: 
