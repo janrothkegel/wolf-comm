@@ -3,6 +3,7 @@ import json
 import logging
 import re
 from typing import Union
+import traceback
 
 import aiohttp
 import httpx
@@ -29,6 +30,7 @@ class WolfClient:
     last_session_refesh: datetime or None
     language: dict or None
     l_choice: str
+    authStore = None
 
     @property
     def client(self):
@@ -39,7 +41,7 @@ class WolfClient:
         else:
             raise RuntimeError("No valid client configuration")
 
-    def __init__(self, username: str, password: str, lang=None, client=None, client_lambda=None):
+    def __init__(self, username: str, password: str, lang=None, client=None, client_lambda=None, authStore=None):
         if client != None and client_lambda != None:
             raise RuntimeError("Only one of client and client_lambda is allowed!")
         elif client != None:
@@ -61,7 +63,20 @@ class WolfClient:
             self.l_choice = 'en'
         else:
             self.l_choice = lang
-    
+        self.authStore=authStore
+        if self.authStore is not None: 
+            try: 
+                with open(self.authStore) as f:
+                    _LOGGER.debug('Restoring session from authStore')
+                    store = json.load(f)
+                    self.tokens = Tokens(access_token=store['access_token'] , expires_in=datetime.datetime.strptime(store['expire_date'], '%m/%d/%y %H:%M:%S') )
+                    self.session_id = store['session_id'] 
+                    self.last_session_refesh = datetime.datetime.strptime(store['last_session_refesh'], '%m/%d/%y %H:%M:%S')
+            except Exception:
+                traceback.print_exc()
+                _LOGGER.debug('authStore not present')
+
+
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
         if self.tokens is None or self.tokens.is_expired():
@@ -106,6 +121,14 @@ class WolfClient:
         self.tokens = await self.token_auth.token(self.client)
         self.session_id = await create_session(self.client, self.tokens.access_token)
         self.last_session_refesh = datetime.datetime.now() + datetime.timedelta(seconds=60)
+
+        if self.authStore is not None: 
+            _LOGGER.debug('Saving auth to authStore')
+            with open(self.authStore, 'w', encoding='utf-8') as f:
+                json.dump({'access_token': self.tokens.access_token, "expire_date": self.tokens.expire_date.strftime('%m/%d/%y %H:%M:%S')
+ , 'session_id': self.session_id, 'last_session_refesh': self.last_session_refesh.strftime('%m/%d/%y %H:%M:%S')}, f, ensure_ascii=False, indent=4)
+
+
 
     # api/portal/GetSystemList
     async def fetch_system_list(self) -> list[Device]:
@@ -277,49 +300,65 @@ class WolfClient:
             _LOGGER.error('Failed to parse localized text for language: %s', language_input)
 
     # api/portal/GetParameterValues
-    async def fetch_value(self, gateway_id, system_id, parameters: list[Parameter], localJsonDump = None):
-        res = None
+    async def fetch_value(self, gateway_id, system_id, parameters: list[Parameter]):
 
-        # For local testing
-        try:
-            if localJsonDump is not None: 
-                with open(localJsonDump) as f: 
-                    res = json.load(f)
-                    _LOGGER.debug('Using local dump instead of hitting API!')
-        except: 
-            _LOGGER.debug('Unable to use local dump, asking API!')
-        finally: 
-            if res is None:
-                data = { 
-                    BUNDLE_ID: 1000,
-                    BUNDLE: False,
-                    VALUE_ID_LIST: [param.value_id for param in parameters],
-                    GATEWAY_ID: gateway_id,
-                    SYSTEM_ID: system_id,
-                    GUI_ID_CHANGED: False,
-                    SESSION_ID: self.session_id,
-                    LAST_ACCESS: self.last_access
-                }
-                #_LOGGER.debug('Doing expert login') 
-                #expert = await self.__request('get', 'api/portal/ExpertLogin', params={'Password': 1111})
-                #_LOGGER.debug('Expert response: %s', expert)
- 
-                res = await self.__request('post', 'api/portal/GetParameterValues', json=data, headers={"Content-Type": "application/json"})
+        # group requested parametes by bundle_id to do a single request per bundle_id
+        values_combined = []
+        bundles = {'none':[]}
+        for param in parameters:
+            if not param.bundle_id:
+                bundles['none'].append(param)
+                continue
+            if not param.bundle_id in bundles:
+                bundles[param.bundle_id] = []
+            bundles[param.bundle_id].append(param)
 
-                if ERROR_CODE in res or ERROR_TYPE in res:
-                    if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
-                        raise ParameterReadError(res)
-                    raise FetchFailed(res)
+      
+        _LOGGER.debug('grouped bundles: %s' , bundles.keys())
+        for bundleId in bundles:
+            _LOGGER.debug('bundle: %s' , bundleId)
+            for param in bundles[bundleId]: 
+                _LOGGER.debug('bundle: %s -> param: %s %s' , bundleId, param.value_id, param.name)
 
-                if localJsonDump is not None: 
-                    _LOGGER.debug('Saving response as local dump')
-                    with open(localJsonDump, 'w', encoding='utf-8') as f:
-                        json.dump(res, f, ensure_ascii=False, indent=4)
+
+
+        _LOGGER.debug('grouped bundles: %s' , bundles.keys())
+        # DO API query per bundle
+        for bundleId in bundles: 
+            if len(bundles[bundleId]) == 0: 
+                _LOGGER.debug('skipping empty bundle: %s' , bundleId)
+                continue
+
+            data = { 
+                BUNDLE_ID: bundleId,
+                BUNDLE: False, 
+                VALUE_ID_LIST: [param.value_id for param in bundles[bundleId]],
+                GATEWAY_ID: gateway_id,
+                SYSTEM_ID: system_id,
+                GUI_ID_CHANGED: False,
+                SESSION_ID: self.session_id,
+                LAST_ACCESS: self.last_access #Probably should be handled per bundle
+            }
+             
+            _LOGGER.debug('Requesting %s values for BUNDLE_ID: %s', len(bundles[bundleId]), bundleId)
+            res = await self.__request('post', 'api/portal/GetParameterValues', json=data, headers={"Content-Type": "application/json"})
+            if ERROR_CODE in res or ERROR_TYPE in res:
+                if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
+                    raise ParameterReadError(res)
+                raise FetchFailed(res)
+
+            values_with_value = [Value(v[VALUE_ID], v[VALUE], v[STATE]) for v in res[VALUES] if VALUE in v] 
+            _LOGGER.debug('Received bundle %s values response %s. %s/%s', bundleId, res, len(values_with_value), len(bundles[bundleId]))
+
+            values_combined += values_with_value
+
 
         self.last_access = res[LAST_ACCESS]
-        _LOGGER.debug('requested values for %s parameters, got values for %s ', len(parameters), len(res[VALUES]))
+        print(values_combined)
+        _LOGGER.debug('requested values for %s parameters, got values for %s ', len(parameters), len(values_combined))
+        return values_combined
         
-        return [Value(v[VALUE_ID], v[VALUE] if VALUE in v else None, v[STATE]) for v in res[VALUES] ]
+        #return [Value(v[VALUE_ID], v[VALUE] if VALUE in v else None, v[STATE]) for v in res[VALUES] ]
 
 # api/portal/WriteParameterValues
     async def write_value(self, gateway_id, system_id, Value):
@@ -349,33 +388,37 @@ class WolfClient:
     def _map_parameter(parameter: dict, parent: str) -> Parameter:
         group = ""
         if GROUP in parameter:
-            group = parameter[GROUP].replace(" ","_")
+            group = parameter[GROUP]
             
         value_id = parameter[VALUE_ID]
         name = parameter[NAME]
+
         parameter_id = parameter[PARAMETER_ID]
 
         if not parent: 
             parent = group
+        bundle_id = None
+        if "BundleId" in parameter: 
+            bundle_id = parameter["BundleId"] 
 
         if UNIT in parameter:
             unit = parameter[UNIT]
             if unit == CELSIUS_TEMPERATURE:
-                return Temperature(value_id, name, parent, parameter_id)
+                return Temperature(value_id, name, parent, parameter_id, bundle_id)
             elif unit == BAR:
-                return Pressure(value_id, name, parent, parameter_id)
+                return Pressure(value_id, name, parent, parameter_id, bundle_id)
             elif unit == PERCENTAGE:
-                return PercentageParameter(value_id, name, parent, parameter_id)
+                return PercentageParameter(value_id, name, parent, parameter_id, bundle_id)
             elif unit == HOUR:
-                return HoursParameter(value_id, name, parent, parameter_id)
+                return HoursParameter(value_id, name, parent, parameter_id, bundle_id)
             elif unit == KILOWATT:
-                return PowerParameter(value_id, name, parent, parameter_id)
+                return PowerParameter(value_id, name, parent, parameter_id, bundle_id)
             elif unit == KILOWATTHOURS:
-                return EnergyParameter(value_id, name, parent, parameter_id)
+                return EnergyParameter(value_id, name, parent, parameter_id, bundle_id)
         elif LIST_ITEMS in parameter:
             items = [ListItem(list_item[VALUE], list_item[DISPLAY_TEXT]) for list_item in parameter[LIST_ITEMS]]
-            return ListItemParameter(value_id, name, parent, items, parameter_id)
-        return SimpleParameter(value_id, name, parent, parameter_id)
+            return ListItemParameter(value_id, name, parent, items, parameter_id, bundle_id)
+        return SimpleParameter(value_id, name, parent, parameter_id, bundle_id)
 
     @staticmethod
     def _map_view(view: dict):
@@ -398,9 +441,16 @@ class WolfClient:
         def traverse(item, path=''):
             # Object is a dict, crawl keys
             if type(item) is dict:
+                bundleId = None
+                if "BundleId" in item: 
+                    bundleId = item["BundleId"]
+		
                 for key in item:
                     if key == "ParameterDescriptors":
                         _LOGGER.debug('Found ParameterDescriptors at path: %s', path)
+                        # Store BundleId from parent in each item for easier parsing
+                        for descriptor in item[key]:
+                            descriptor["BundleId"] = bundleId
                         yield from item[key]
                     yield from traverse(item[key], path + key + '>')
 
