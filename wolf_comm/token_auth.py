@@ -14,7 +14,7 @@ import shortuuid
 _LOGGER = logging.getLogger(__name__)
 
 
-class Tokens:
+class Tokens():
     """Has only one token: access"""
 
     def __init__(self, access_token: str, expires_in: int):

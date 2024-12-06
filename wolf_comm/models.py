@@ -36,6 +36,11 @@ class Parameter(ABC):
 
     @property
     @abstractmethod
+    def bundle_id(self):
+        ...
+
+    @property
+    @abstractmethod
     def parent(self):
         ...
 
@@ -68,11 +73,16 @@ class SimpleParameter(Parameter):
     def parameter_id(self):
         return self._parameter_id
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int):
+    @property
+    def bundle_id(self):
+        return self._bundle_id
+
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
+        self._bundle_id = bundle_id
 
 
 class UnitParameter(Parameter, ABC):
@@ -111,14 +121,23 @@ class Temperature(UnitParameter):
         self._value_id = value_id
 
     @property
+    def parameter_id(self):
+        return self._parameter_id
+
+    @property
+    def bundle_id(self):
+        return self._bundle_id
+
+    @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
+        self._bundle_id = bundle_id
 
 
 class Pressure(UnitParameter):
@@ -147,14 +166,24 @@ class Pressure(UnitParameter):
         self._value_id = value_id
 
     @property
+    def parameter_id(self):
+        return self._parameter_id
+
+    @property
+    def bundle_id(self):
+        return self._bundle_id
+
+    @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
+        self._bundle_id = bundle_id
+
 
 
 class HoursParameter(UnitParameter):
@@ -183,14 +212,24 @@ class HoursParameter(UnitParameter):
         self._value_id = value_id
 
     @property
+    def parameter_id(self):
+        return self._parameter_id
+
+    @property
+    def bundle_id(self):
+        return self._bundle_id
+
+    @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
+        self._bundle_id = bundle_id
+
 
 
 class PercentageParameter(UnitParameter):
@@ -220,14 +259,24 @@ class PercentageParameter(UnitParameter):
         self._value_id = value_id
 
     @property
+    def parameter_id(self):
+        return self._parameter_id
+
+    @property
+    def bundle_id(self):
+        return self._bundle_id
+
+    @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
+        self._bundle_id = bundle_id
+
 
 class PowerParameter(UnitParameter):
 
@@ -256,14 +305,24 @@ class PowerParameter(UnitParameter):
         self._value_id = value_id
 
     @property
+    def parameter_id(self):
+        return self._parameter_id
+
+    @property
+    def bundle_id(self):
+        return self._bundle_id
+
+    @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
+        self._bundle_id = bundle_id
+
 
 class EnergyParameter(UnitParameter):
 
@@ -292,14 +351,20 @@ class EnergyParameter(UnitParameter):
         self._value_id = value_id
 
     @property
+    def bundle_id(self):
+        return self._bundle_id
+
+    @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
+        self._bundle_id = bundle_id
+
 
 
 class ListItem:
@@ -329,6 +394,10 @@ class ListItemParameter(Parameter):
         self._value_id = value_id
 
     @property
+    def bundle_id(self):
+        return self._bundle_id
+
+    @property
     def name(self):
         return self._name
 
@@ -340,12 +409,14 @@ class ListItemParameter(Parameter):
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, items: [ListItem], parameter_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, items: [ListItem], parameter_id: int, bundle_id: int):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self.items = items
         self._parameter_id = parameter_id
+        self._bundle_id = bundle_id
+
 
     def __str__(self) -> str:
         return super().__str__() + " items: " + ", ".join([item.__str__() for item in self.items])
