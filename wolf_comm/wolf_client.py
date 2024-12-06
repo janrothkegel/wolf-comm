@@ -210,7 +210,7 @@ class WolfClient:
                     distinct_ids.append(val.value_id)
                     flattened.append(val)
                 else:
-                    _LOGGER.debug('Skipping parameter with id %s and name %s', val.value_id, name)
+                    _LOGGER.debug('Skipping parameter with id %s and name %s', val.value_id, val.name)
         flattened_fixed = self.fix_duplicated_parameters(flattened)
         return flattened_fixed
 
@@ -400,6 +400,7 @@ class WolfClient:
         bundle_id = None
         if "BundleId" in parameter: 
             bundle_id = parameter["BundleId"] 
+
 
         if UNIT in parameter:
             unit = parameter[UNIT]
