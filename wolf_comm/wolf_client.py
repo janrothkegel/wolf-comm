@@ -2,7 +2,7 @@ import datetime
 import json
 import logging
 import re
-from typing import Union
+from typing import Optional, Union
 import traceback
 
 import aiohttp
@@ -23,12 +23,12 @@ _LOGGER = logging.getLogger(__name__)
 SPLIT = '---'
 
 class WolfClient:
-    session_id: int or None
-    tokens: Tokens or None
-    last_access: datetime or None
+    session_id: Union[int, None]
+    tokens: Union[Tokens, None]
+    last_access: Optional[datetime.datetime]
     last_failed: bool
-    last_session_refesh: datetime or None
-    language: dict or None
+    last_session_refesh: Optional[datetime.datetime]
+    language: Optional[dict]
     l_choice: str
     authStore = None
 
@@ -304,10 +304,10 @@ class WolfClient:
 
         # group requested parametes by bundle_id to do a single request per bundle_id
         values_combined = []
-        bundles = {'none':[]}
+        bundles = {'':[]}
         for param in parameters:
             if not param.bundle_id:
-                bundles['none'].append(param)
+                bundles[''].append(param)
                 continue
             if not param.bundle_id in bundles:
                 bundles[param.bundle_id] = []
@@ -330,7 +330,7 @@ class WolfClient:
                 continue
 
             data = { 
-                BUNDLE_ID: bundleId,
+                BUNDLE_ID: bundleId if bundleId != '' else 1000,
                 BUNDLE: False, 
                 VALUE_ID_LIST: [param.value_id for param in bundles[bundleId]],
                 GATEWAY_ID: gateway_id,
@@ -358,7 +358,7 @@ class WolfClient:
         _LOGGER.debug('requested values for %s parameters, got values for %s ', len(parameters), len(values_combined))
         return values_combined
         
-        #return [Value(v[VALUE_ID], v[VALUE] if VALUE in v else None, v[STATE]) for v in res[VALUES] ]
+        #preturn [Value(v[VALUE_ID], v[VALUE] if VALUE in v else None, v[STATE]) for v in res[VALUES] ]
 
 # api/portal/WriteParameterValues
     async def write_value(self, gateway_id, system_id, Value):
@@ -397,9 +397,9 @@ class WolfClient:
 
         if not parent: 
             parent = group
-        bundle_id = None
-        if "BundleId" in parameter: 
-            bundle_id = parameter["BundleId"] 
+        bundle_id = ""
+        if BUNDLE_ID in parameter: 
+            bundle_id = parameter[BUNDLE_ID] 
 
 
         if UNIT in parameter:
