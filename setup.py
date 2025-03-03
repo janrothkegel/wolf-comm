@@ -21,6 +21,7 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
     ],
     install_requires=[
+        'aiohttp',
         'httpx',
         'lxml',
         'pkce',
