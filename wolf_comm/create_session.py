@@ -22,7 +22,7 @@ async def update_session(client: AsyncClient, token: str, session_id: str):
     data = {
         SESSION_ID: session_id
     }
-    resp = await client.post(constants.BASE_URL_PORTAL + "/api/portal/UpdateSession",
+    await client.post(constants.BASE_URL_PORTAL + "/api/portal/UpdateSession",
                               headers=Headers({**bearer_header(token),
                                                **{"Content-Type": "application/json"}}),
                               json=data)

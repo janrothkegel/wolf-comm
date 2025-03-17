@@ -2,13 +2,13 @@ import datetime
 import json
 import logging
 import re
-from typing import Union
+from typing import Union, Optional
 
 import aiohttp
 import httpx
 from httpx import Headers
 
-from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, SUB_MENU_ENTRIES, TAB_VIEWS, BUNDLE_ID, \
+from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, RPM, FLOW, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
     LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES
@@ -22,12 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 SPLIT = '---'
 
 class WolfClient:
-    session_id: int or None
-    tokens: Tokens or None
-    last_access: datetime or None
+    session_id: Optional[int]
+    tokens: Optional[Tokens]
+    last_access: Optional[datetime.datetime]
     last_failed: bool
-    last_session_refesh: datetime or None
-    language: dict or None
+    last_session_refesh: Optional[datetime.datetime]
+    language: Optional[dict]
     l_choice: str
 
     @property
@@ -40,11 +40,11 @@ class WolfClient:
             raise RuntimeError("No valid client configuration")
 
     def __init__(self, username: str, password: str, lang=None, client=None, client_lambda=None):
-        if client != None and client_lambda != None:
+        if client is not None and client_lambda is not None:
             raise RuntimeError("Only one of client and client_lambda is allowed!")
-        elif client != None:
+        elif client is not None:
             self._client = client
-        elif client_lambda != None:
+        elif client_lambda is not None:
             self._client_lambda = client_lambda
         else:
             self._client = httpx.AsyncClient()

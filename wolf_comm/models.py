@@ -411,7 +411,7 @@ class ListItemParameter(Parameter):
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, items: [ListItem], parameter_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, items: list[ListItem], parameter_id: int):
         self._value_id = value_id
         self._name = name
         self._parent = parent
