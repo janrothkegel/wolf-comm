@@ -60,6 +60,8 @@ RPM = 'U/min'
 
 FLOW = 'l/min'
 
+FREQUENCY = 'Hz'
+
 CELSIUS_TEMPERATURE = '°C'
 
 VALUES = 'Values'

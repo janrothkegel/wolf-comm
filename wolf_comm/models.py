@@ -373,6 +373,42 @@ class FlowParameter(UnitParameter):
         self._parent = parent
         self._parameter_id = parameter_id
 
+class FrequencyParameter(UnitParameter):
+
+    @property
+    def parameter_id(self):
+        return self._parameter_id
+
+    @property
+    def unit(self):
+        return "Hz"
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name: str):
+        self._name = name
+
+    @property
+    def value_id(self):
+        return self._value_id
+
+    @value_id.setter
+    def value_id(self, value_id: int):
+        self._value_id = value_id
+
+    @property
+    def parent(self):
+        return self._parent
+
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int):
+        self._value_id = value_id
+        self._name = name
+        self._parent = parent
+        self._parameter_id = parameter_id
+
 class ListItem:
     name: str
     value: int
