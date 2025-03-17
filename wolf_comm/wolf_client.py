@@ -301,30 +301,33 @@ class WolfClient:
         name = group + parameter[NAME]
         parameter_id = parameter[PARAMETER_ID]
 
+        if BUNDLE_ID in parameter:
+            bundle_id = parameter[BUNDLE_ID]
+
         if UNIT in parameter:
             unit = parameter[UNIT]
             if unit == CELSIUS_TEMPERATURE:
-                return Temperature(value_id, name, parent, parameter_id)
+                return Temperature(value_id, name, parent, parameter_id, bundle_id)
             elif unit == BAR:
-                return Pressure(value_id, name, parent, parameter_id)
+                return Pressure(value_id, name, parent, parameter_id, bundle_id)
             elif unit == PERCENTAGE:
-                return PercentageParameter(value_id, name, parent, parameter_id)
+                return PercentageParameter(value_id, name, parent, parameter_id, bundle_id)
             elif unit == HOUR:
-                return HoursParameter(value_id, name, parent, parameter_id)
+                return HoursParameter(value_id, name, parent, parameter_id, bundle_id)
             elif unit == KILOWATT:
-                return PowerParameter(value_id, name, parent, parameter_id)
+                return PowerParameter(value_id, name, parent, parameter_id, bundle_id)
             elif unit == KILOWATTHOURS:
-                return EnergyParameter(value_id, name, parent, parameter_id)
+                return EnergyParameter(value_id, name, parent, parameter_id, bundle_id)
             elif unit == RPM:
-                return RPMParameter(value_id, name, parent, parameter_id)
+                return RPMParameter(value_id, name, parent, parameter_id, bundle_id)
             elif unit == FLOW:
-                return FlowParameter(value_id, name, parent, parameter_id)
+                return FlowParameter(value_id, name, parent, parameter_id, bundle_id)
             elif unit == FREQUENCY:
-                return FrequencyParameter(value_id, name, parent, parameter_id)
+                return FrequencyParameter(value_id, name, parent, parameter_id, bundle_id)
         elif LIST_ITEMS in parameter:
             items = [ListItem(list_item[VALUE], list_item[DISPLAY_TEXT]) for list_item in parameter[LIST_ITEMS]]
-            return ListItemParameter(value_id, name, parent, items, parameter_id)
-        return SimpleParameter(value_id, name, parent, parameter_id)
+            return ListItemParameter(value_id, name, parent, items, parameter_id, bundle_id)
+        return SimpleParameter(value_id, name, parent, parameter_id, bundle_id)
 
     @staticmethod
     def _map_view(view: dict):
