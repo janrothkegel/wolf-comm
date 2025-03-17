@@ -111,7 +111,8 @@ class TokenAuth:
                 return Tokens(json.get("access_token"), json.get("expires_in"))
             else:
                 raise InvalidAuth
-        except:
+        except Exception as e:
+            _LOGGER.error('An error occurred: %s', e)
             raise InvalidAuth
 
 class InvalidAuth(Exception):
