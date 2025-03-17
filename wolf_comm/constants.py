@@ -56,6 +56,8 @@ KILOWATTHOURS = 'kWh'
 
 BAR = 'bar'
 
+RPM = 'U/min'
+
 CELSIUS_TEMPERATURE = '°C'
 
 VALUES = 'Values'
