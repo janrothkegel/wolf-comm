@@ -58,6 +58,8 @@ BAR = 'bar'
 
 RPM = 'U/min'
 
+FLOW = 'l/min'
+
 CELSIUS_TEMPERATURE = '°C'
 
 VALUES = 'Values'

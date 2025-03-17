@@ -10,12 +10,12 @@ from httpx import Headers
 
 from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, SUB_MENU_ENTRIES, TAB_VIEWS, BUNDLE_ID, \
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
-    CELSIUS_TEMPERATURE, BAR, RPM, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
+    CELSIUS_TEMPERATURE, BAR, RPM, FLOW, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
     LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES
 from wolf_comm.create_session import create_session, update_session
 from wolf_comm.helpers import bearer_header
 from wolf_comm.models import Temperature, Parameter, SimpleParameter, Device, Pressure, ListItemParameter, \
-    PercentageParameter, Value, ListItem, HoursParameter, PowerParameter, EnergyParameter, RPMParameter
+    PercentageParameter, Value, ListItem, HoursParameter, PowerParameter, EnergyParameter, RPMParameter, FlowParameter
 from wolf_comm.token_auth import Tokens, TokenAuth
 
 _LOGGER = logging.getLogger(__name__)
@@ -317,6 +317,8 @@ class WolfClient:
                 return EnergyParameter(value_id, name, parent, parameter_id)
             elif unit == RPM:
                 return RPMParameter(value_id, name, parent, parameter_id)
+            elif unit == FLOW:
+                return FlowParameter(value_id, name, parent, parameter_id)
         elif LIST_ITEMS in parameter:
             items = [ListItem(list_item[VALUE], list_item[DISPLAY_TEXT]) for list_item in parameter[LIST_ITEMS]]
             return ListItemParameter(value_id, name, parent, items, parameter_id)
