@@ -80,6 +80,8 @@ PARAMETER_DESCRIPTORS = 'ParameterDescriptors'
 
 UNIT = 'Unit'
 
+IS_READONLY = 'IsReadOnly'
+
 TAB_NAME = 'TabName'
 
 VALUE_ID = 'ValueId'

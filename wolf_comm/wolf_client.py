@@ -11,10 +11,10 @@ from httpx import Headers
 from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, RPM, FLOW, FREQUENCY, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
-    LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES
+    LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES, IS_READONLY
 from wolf_comm.create_session import create_session, update_session
 from wolf_comm.helpers import bearer_header
-from wolf_comm.models import Temperature, Parameter, SimpleParameter, Device, Pressure, ListItemParameter, \
+from wolf_comm.models import Temperature, Parameter, Device, Pressure, ListItemParameter, \
     PercentageParameter, Value, ListItem, HoursParameter, PowerParameter, EnergyParameter, RPMParameter, FlowParameter, FrequencyParameter
 from wolf_comm.token_auth import Tokens, TokenAuth
 
@@ -32,14 +32,14 @@ class WolfClient:
 
     @property
     def client(self):
-        if hasattr(self, '_client') and self._client != None:
+        if hasattr(self, '_client') and self._client is not None:
             return self._client
-        elif hasattr(self, '_client_lambda') and self._client_lambda != None:
+        elif hasattr(self, '_client_lambda') and self._client_lambda is not None:
             return self._client_lambda()
         else:
             raise RuntimeError("No valid client configuration")
 
-    def __init__(self, username: str, password: str, lang=None, client=None, client_lambda=None):
+    async def __init__(self, username: str, password: str, lang=None, client=None, client_lambda=None):
         if client is not None and client_lambda is not None:
             raise RuntimeError("Only one of client and client_lambda is allowed!")
         elif client is not None:
@@ -47,7 +47,7 @@ class WolfClient:
         elif client_lambda is not None:
             self._client_lambda = client_lambda
         else:
-            self._client = httpx.AsyncClient()
+            self._client = await httpx.AsyncClient()
 
         self.tokens = None
         self.token_auth = TokenAuth(username, password)
@@ -57,38 +57,30 @@ class WolfClient:
         self.last_session_refesh = None
         self.language = None
         
-        if lang is None:
-            self.l_choice = 'en'
-        else:
-            self.l_choice = lang
+        self.l_choice = lang if lang is not None else 'en'
     
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
         if self.tokens is None or self.tokens.is_expired():
             await self.__authorize_and_session()
 
-        headers = kwargs.get('headers')
-
-        if headers is None:
-            headers = bearer_header(self.tokens.access_token)
-        else:
-            headers = {**bearer_header(self.tokens.access_token), **dict(headers)}
+        headers = kwargs.get('headers', {})
+        headers = {**bearer_header(self.tokens.access_token), **headers}
 
         if self.last_session_refesh is None or self.last_session_refesh <= datetime.datetime.now():
             await update_session(self.client, self.tokens.access_token, self.session_id)
             self.last_session_refesh = datetime.datetime.now() + datetime.timedelta(seconds=60)
-            _LOGGER.debug('Sessionid: %s extented', self.session_id)
+            _LOGGER.debug('Session ID: %s extended', self.session_id)
 
         if 'json' in kwargs and self.session_id is not None:
-            if isinstance(kwargs['json'], dict):  # Check if json is a dict
-                kwargs['json'][SESSION_ID] = self.session_id  # add sessionId to json-object
+            if isinstance(kwargs['json'], dict):
+                kwargs['json'][SESSION_ID] = self.session_id
 
         resp = await self.__execute(headers, kwargs, method, path)
-        if resp.status_code == 401 or resp.status_code == 500:
-            _LOGGER.info('Retrying failed request (status code %d)',
-                         resp.status_code)
+        if resp.status_code in {401, 500}:
+            _LOGGER.info('Retrying failed request (status code %d)', resp.status_code)
             await self.__authorize_and_session()
-            headers = {**bearer_header(self.tokens.access_token), **dict(headers)}
+            headers = {**bearer_header(self.tokens.access_token), **headers}
             try:
                 execution = await self.__execute(headers, kwargs, method, path)
                 return execution.json()
@@ -293,42 +285,35 @@ class WolfClient:
 
     @staticmethod
     def _map_parameter(parameter: dict, parent: str) -> Parameter:
-        group = ""
-        if GROUP in parameter:
-            group = parameter[GROUP] + SPLIT
-            
+        group = parameter.get(GROUP, "") + SPLIT if GROUP in parameter else ""
         value_id = parameter[VALUE_ID]
         name = group + parameter[NAME]
         parameter_id = parameter[PARAMETER_ID]
+        bundle_id = parameter.get(BUNDLE_ID, "1000")
+        readonly = parameter.get(IS_READONLY, True)
 
-        bundle_id = ""
-        if BUNDLE_ID in parameter:
-            bundle_id = parameter[BUNDLE_ID]
+        unit_parameter_classes = {
+            CELSIUS_TEMPERATURE: Temperature,
+            BAR: Pressure,
+            PERCENTAGE: PercentageParameter,
+            HOUR: HoursParameter,
+            KILOWATT: PowerParameter,
+            KILOWATTHOURS: EnergyParameter,
+            RPM: RPMParameter,
+            FLOW: FlowParameter,
+            FREQUENCY: FrequencyParameter
+        }
 
         if UNIT in parameter:
             unit = parameter[UNIT]
-            if unit == CELSIUS_TEMPERATURE:
-                return Temperature(value_id, name, parent, parameter_id, bundle_id)
-            elif unit == BAR:
-                return Pressure(value_id, name, parent, parameter_id, bundle_id)
-            elif unit == PERCENTAGE:
-                return PercentageParameter(value_id, name, parent, parameter_id, bundle_id)
-            elif unit == HOUR:
-                return HoursParameter(value_id, name, parent, parameter_id, bundle_id)
-            elif unit == KILOWATT:
-                return PowerParameter(value_id, name, parent, parameter_id, bundle_id)
-            elif unit == KILOWATTHOURS:
-                return EnergyParameter(value_id, name, parent, parameter_id, bundle_id)
-            elif unit == RPM:
-                return RPMParameter(value_id, name, parent, parameter_id, bundle_id)
-            elif unit == FLOW:
-                return FlowParameter(value_id, name, parent, parameter_id, bundle_id)
-            elif unit == FREQUENCY:
-                return FrequencyParameter(value_id, name, parent, parameter_id, bundle_id)
-        elif LIST_ITEMS in parameter:
+            if unit in unit_parameter_classes:
+                return unit_parameter_classes[unit](value_id, name, parent, parameter_id, bundle_id, readonly)
+
+        if LIST_ITEMS in parameter:
             items = [ListItem(list_item[VALUE], list_item[DISPLAY_TEXT]) for list_item in parameter[LIST_ITEMS]]
-            return ListItemParameter(value_id, name, parent, items, parameter_id, bundle_id)
-        return SimpleParameter(value_id, name, parent, parameter_id, bundle_id)
+            return ListItemParameter(value_id, name, parent, items, parameter_id, bundle_id, readonly)
+
+        return Parameter(value_id, name, parent, parameter_id, bundle_id, readonly)
 
     @staticmethod
     def _map_view(view: dict):

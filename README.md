@@ -8,6 +8,6 @@
 - Fetch value for specific parameter
 
 ### Parameter descriptions
-Parameters verified only for FGB-28 system.
-Other should work.
+Parameters verified only for ISM7 with gas/solar-system.
+Other like heatpumps should work too.
 Keep in mind that core implementation of fetching parameters is removing duplications by value_id and name.
