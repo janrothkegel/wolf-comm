@@ -301,6 +301,7 @@ class WolfClient:
         name = group + parameter[NAME]
         parameter_id = parameter[PARAMETER_ID]
 
+        bundle_id = ""
         if BUNDLE_ID in parameter:
             bundle_id = parameter[BUNDLE_ID]
 
