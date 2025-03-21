@@ -202,6 +202,9 @@ class WolfClient:
         seen = set()
         new_parameters = []
         for parameter in parameters:
+            if parameter is None:
+                _LOGGER.error("Encountered None value in parameters")
+                continue                
             if parameter.value_id not in seen:
                 new_parameters.append(parameter)
                 seen.add(parameter.vakue_id)
