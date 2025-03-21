@@ -83,7 +83,8 @@ class WolfClient:
     last_failed: bool
     last_session_refesh: Optional[datetime.datetime]
     language: Optional[dict]
-    region_set: str = "en"
+    region_set: str
+    expert_mode: bool
 
     @property
     def client(self):
@@ -95,7 +96,7 @@ class WolfClient:
             raise RuntimeError("No valid client configuration")
 
     async def __init__(
-        self, username: str, password: str, region=None, client=None, client_lambda=None
+        self, username: str, password: str, expert_p=False, region=None, client=None, client_lambda=None
     ):
         if client is not None and client_lambda is not None:
             raise RuntimeError("Only one of client and client_lambda is allowed!")
@@ -113,7 +114,7 @@ class WolfClient:
         self.last_failed = False
         self.last_session_refesh = None
         self.language = None
-
+        self.expert_mode = expert_p
         self.region_set = region if region is not None else "en"
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
@@ -213,9 +214,12 @@ class WolfClient:
             "get", "api/portal/GetGuiDescriptionForGateway", params=payload
         )
         _LOGGER.debug("Fetched parameters: %s", desc)
-        tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
-
-        result = [WolfClient._map_view(view) for view in tab_views]
+        if self.expert_mode:
+            descriptors =WolfClient._extract_parameter_descriptors(desc)
+            result = [WolfClient._map_parameter(p, None) for p in descriptors]
+        else:
+            tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
+            result = [WolfClient._map_view(view) for view in tab_views]
         result.reverse()
         distinct_ids = []
         flattened = []
