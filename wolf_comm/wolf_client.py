@@ -276,16 +276,16 @@ class WolfClient:
     async def fetch_value(self, gateway_id, system_id, parameters: list[Parameter]):
           # group requested parametes by bundle_id to do a single request per bundle_id
         values_combined = []
-        bundles = {[]}
+        bundles = {}
         for param in parameters:
             if param.bundle_id not in bundles:
                 bundles[param.bundle_id] = []
             bundles[param.bundle_id].append(param)
 
-            for bundle_id in bundles:
-                if len(bundles[bundle_id]) == 0:
-                    continue
-                data = {
+        for bundle_id in bundles:
+            if len(bundles[bundle_id]) == 0:
+                continue
+            data = {
                     BUNDLE_ID: bundle_id,
                     BUNDLE: False,
                     VALUE_ID_LIST: [param.value_id for param in parameters],
@@ -295,17 +295,17 @@ class WolfClient:
                     SESSION_ID: self.session_id,
                     LAST_ACCESS: self.last_access,
                 }
-                _LOGGER.debug('Requesting %s values for BUNDLE_ID: %s', len(bundles[bundle_id]), bundle_id)
+            _LOGGER.debug('Requesting %s values for BUNDLE_ID: %s', len(bundles[bundle_id]), bundle_id)
                 
-                res = await self.__request("post","api/portal/GetParameterValues",json=data,headers={"Content-Type": "application/json"})
+            res = await self.__request("post","api/portal/GetParameterValues",json=data,headers={"Content-Type": "application/json"})
 
-                if ERROR_CODE in res or ERROR_TYPE in res:
+            if ERROR_CODE in res or ERROR_TYPE in res:
                     if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
                         raise ParameterReadError(res)
                     raise FetchFailed(res)
                 
-                values_with_value = [Value(v[VALUE_ID], v[VALUE], v[STATE]) for v in res[VALUES] if VALUE in v]
-                values_combined += values_with_value 
+            values_with_value = [Value(v[VALUE_ID], v[VALUE], v[STATE]) for v in res[VALUES] if VALUE in v]
+            values_combined += values_with_value 
 
         self.last_access = res[LAST_ACCESS]
         _LOGGER.debug('requested values for %s parameters, got values for %s ', len(parameters), len(values_combined))
