@@ -203,11 +203,11 @@ class WolfClient:
         new_parameters = []
         for parameter in parameters:
             if parameter is None:
-                _LOGGER.error("Encountered None value in parameters")
+                _LOGGER.debug("Encountered None value in parameters")
                 continue                
             if parameter.value_id not in seen:
                 new_parameters.append(parameter)
-                seen.add(parameter.vakue_id)
+                seen.add(parameter.value_id)
                 _LOGGER.debug("Adding parameter: %s", parameter.value_id)
             else:
                 _LOGGER.debug(
