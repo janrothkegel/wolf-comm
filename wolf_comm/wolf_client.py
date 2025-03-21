@@ -408,12 +408,19 @@ class WolfClient:
     @staticmethod
     def _extract_parameter_descriptors(desc):
         # recursively traverses datastructure returned by GetGuiDescriptionForGateway API and extracts all ParameterDescriptors arrays
-        def traverse(item, path=""):
+        def traverse(item, path=''):
             # Object is a dict, crawl keys
             if type(item) is dict:
+                bundleId = None
+                if "BundleId" in item: 
+                    bundleId = item["BundleId"]
+		
                 for key in item:
                     if key == "ParameterDescriptors":
                         _LOGGER.debug("Found ParameterDescriptors at path: %s", path)
+                        # Store BundleId from parent in each item for getting values
+                        for descriptor in item[key]:
+                            descriptor["BundleId"] = bundleId
                         yield from item[key]
                     yield from traverse(item[key], path + key + ">")
 
