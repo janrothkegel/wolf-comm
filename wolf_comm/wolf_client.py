@@ -152,50 +152,49 @@ class WolfClient:
 
     # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
     async def fetch_parameters(self, gateway_id, system_id) -> list[Parameter]:
-        await self.load_localized_json(self.region_set)
-        payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
-        desc = await self.__request(
-            "get", "api/portal/GetGuiDescriptionForGateway", params=payload
-        )
-        _LOGGER.debug("Fetched parameters: %s", desc)
         if self.expert_mode:
-            descriptors =WolfClient._extract_parameter_descriptors(desc)
-            result = [[WolfClient._map_parameter(p, None) for p in descriptors]]
+            return await self.fetch_parameters_v2(gateway_id, system_id)
         else:
+            await self.load_localized_json(self.region_set)
+            payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
+            desc = await self.__request(
+                "get", "api/portal/GetGuiDescriptionForGateway", params=payload
+            )
+            _LOGGER.debug("Fetched parameters: %s", desc)
             tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
             result = [WolfClient._map_view(view) for view in tab_views]
-        result.reverse()
-        distinct_ids = []
-        flattened = []
-        for sublist in result:
-            for val in sublist:
-                spaceSplit = val.name.split(SPLIT, 2)
-                if len(spaceSplit) == 2:
-                    key = (
-                        spaceSplit[0].split("_")[1]
-                        if spaceSplit[0].count("_") > 0
-                        else spaceSplit[0]
-                    )
-                    name = (
-                        self.replace_with_localized_text(key)
-                        + " "
-                        + self.replace_with_localized_text(spaceSplit[1])
-                    )
-                    val.name = name
-                else:
-                    val.name = self.replace_with_localized_text(val.name)
+            result.reverse()
+            distinct_ids = []
+            flattened = []
+            for sublist in result:
+                for val in sublist:
+                    spaceSplit = val.name.split(SPLIT, 2)
+                    if len(spaceSplit) == 2:
+                        key = (
+                            spaceSplit[0].split("_")[1]
+                            if spaceSplit[0].count("_") > 0
+                            else spaceSplit[0]
+                        )
+                        name = (
+                            self.replace_with_localized_text(key)
+                            + " "
+                            + self.replace_with_localized_text(spaceSplit[1])
+                        )
+                        val.name = name
+                    else:
+                        val.name = self.replace_with_localized_text(val.name)
 
-                if val.value_id not in distinct_ids:
-                    distinct_ids.append(val.value_id)
-                    flattened.append(val)
-                else:
-                    _LOGGER.debug(
-                        "Skipping parameter with id %s and name %s",
-                        val.value_id,
-                        val.name,
-                    )
-        flattened_fixed = self.fix_duplicated_parameters(flattened)
-        return flattened_fixed
+                    if val.value_id not in distinct_ids:
+                        distinct_ids.append(val.value_id)
+                        flattened.append(val)
+                    else:
+                        _LOGGER.debug(
+                            "Skipping parameter with id %s and name %s",
+                            val.value_id,
+                            val.name,
+                        )
+            flattened_fixed = self.fix_duplicated_parameters(flattened)
+            return flattened_fixed
 
     def fix_duplicated_parameters(self, parameters):
         """Fix duplicated parameters."""
