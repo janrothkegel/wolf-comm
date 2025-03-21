@@ -10,25 +10,25 @@ AUTHENTICATION_URL = "/idsrv"
 AUTHENTICATION_BASE_URL = BASE_URL + AUTHENTICATION_URL
 AUTHENTICATION_CLIENT = "smartset.web"
 
-SESSION_ID = 'SessionId'
+SESSION_ID = "SessionId"
 
-GUI_ID_CHANGED = 'GuiIdChanged'
+GUI_ID_CHANGED = "GuiIdChanged"
 
-BUNDLE_ID = 'BundleId'
+BUNDLE_ID = "BundleId"
 
-BUNDLE = 'IsSubBundle'
+BUNDLE = "IsSubBundle"
 
-VALUE_ID_LIST = 'ValueIdList'
+VALUE_ID_LIST = "ValueIdList"
 
-ID = 'Id'
+ID = "Id"
 
-SYSTEM_ID = 'SystemId'
+SYSTEM_ID = "SystemId"
 
-TAB_VIEWS = 'TabViews'
+TAB_VIEWS = "TabViews"
 
-MENU_ITEMS = 'MenuItems'
+MENU_ITEMS = "MenuItems"
 
-SUB_MENU_ENTRIES = 'SubMenuEntries'
+SUB_MENU_ENTRIES = "SubMenuEntries"
 
 GATEWAY_ID = "GatewayId"
 
@@ -40,58 +40,60 @@ ERROR_CODE = "ErrorCode"
 
 ERROR_TYPE = "ErrorType"
 
-ERROR_READ_PARAMETER = 'internal msg: ReadParameterValues error'
+ERROR_READ_PARAMETER = "internal msg: ReadParameterValues error"
 
-ERROR_MESSAGE = 'Message'
+ERROR_MESSAGE = "Message"
 
-NAME = 'Name'
+NAME = "Name"
 
-PERCENTAGE = '%'
+PERCENTAGE = "%"
 
-HOUR = 'Std'
+HOUR = "Std"
 
-KILOWATT = 'kW'
+KILOWATT = "kW"
 
-KILOWATTHOURS = 'kWh'
+KILOWATTHOURS = "kWh"
 
-BAR = 'bar'
+BAR = "bar"
 
-RPM = 'U/min'
+RPM = "U/min"
 
-FLOW = 'l/min'
+FLOW = "l/min"
 
-FREQUENCY = 'Hz'
+FREQUENCY = "Hz"
 
-CELSIUS_TEMPERATURE = '°C'
+CELSIUS_TEMPERATURE = "°C"
 
-VALUES = 'Values'
+VALUES = "Values"
 
-STATE = 'State'
+STATE = "State"
 
-LIST_ITEMS = 'ListItems'
+LIST_ITEMS = "ListItems"
 
-DISPLAY_TEXT = 'DisplayText'
+DISPLAY_TEXT = "DisplayText"
 
-VALUE = 'Value'
+VALUE = "Value"
 
-PARAMETER_ID = 'ParameterId'
+PARAMETER_ID = "ParameterId"
 
-PARAMETER_DESCRIPTORS = 'ParameterDescriptors'
+PARAMETER_DESCRIPTORS = "ParameterDescriptors"
 
-UNIT = 'Unit'
+UNIT = "Unit"
 
-IS_READONLY = 'IsReadOnly'
+IS_READONLY = "IsReadOnly"
 
-TAB_NAME = 'TabName'
+TAB_NAME = "TabName"
 
-VALUE_ID = 'ValueId'
+VALUE_ID = "ValueId"
 
-GROUP = 'Group'
+GROUP = "Group"
 
-SYSTEM_LIST = 'SystemList'
+SYSTEM_LIST = "SystemList"
 
-GATEWAY_STATE = 'GatewayState'
+GATEWAY_STATE = "GatewayState"
 
-IS_ONLINE = 'IsOnline'
+IS_ONLINE = "IsOnline"
 
-WRITE_PARAMETER_VALUES = 'WriteParameterValues'
+WRITE_PARAMETER_VALUES = "WriteParameterValues"
+
+IS_READONLY = "IsReadOnly"

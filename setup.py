@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='wolf_comm',
-    version='0.0.24',
+    name="wolf_comm",
+    version="0.0.24",
     author="Jan Rothkegel",
     author_email="jan.rothkegel@web.de",
     description="A package to communicate with Wolf SmartSet Cloud",
@@ -20,11 +20,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "License :: OSI Approved :: Apache Software License",
     ],
-    install_requires=[
-        'aiohttp',
-        'httpx',
-        'lxml',
-        'pkce',
-        'shortuuid'
-    ]
+    install_requires=["aiohttp", "httpx", "lxml", "pkce", "shortuuid"],
 )
