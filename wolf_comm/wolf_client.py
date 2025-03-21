@@ -379,7 +379,8 @@ class WolfClient:
         elif LIST_ITEMS in parameter:
             items = [ListItem(list_item[VALUE], list_item[DISPLAY_TEXT]) for list_item in parameter[LIST_ITEMS]]
             return ListItemParameter(value_id, name, parent, items, parameter_id, bundle_id, readonly)
-        return SimpleParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
+        else:
+            return SimpleParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
 
     @staticmethod
     def _map_view(view: dict):
