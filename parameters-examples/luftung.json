@@ -1,0 +1,827 @@
+{'MenuItems': [
+        {'Name': 'Benutzer', 'SubMenuEntries': [], 'ParameterNode': True, 'ImageName': 'MenuIcon_Home.png', 'TabViews': [
+                {'IsExpertView': False, 'TabName': 'Übersicht', 'GuiId': 6400, 'BundleId': 1000, 'ParameterDescriptors': [
+                        {'ValueId': 39001100000, 'SortId': 0, 'SubBundleId': 0, 'ParameterId': 39001100000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'AU Außenlufttemperatur', 'ControlType': 0, 'Value': '17.8', 'ValueState': 0, 'HasDependentParameter': False
+                        }
+                    ], 'ViewType': 7, 'SvgSchemaDeviceId': 0, 'GetValueLastAccess': '2024-06-23T07: 58: 51.765354Z', 'TabViewGroups': [], 'SVGHeatingSchemaConfigDevices': [
+                        {'dt': 'BM', 'di': 0, 'deviceTemplateName': 'BM_2', 'configIndex': 0
+                        },
+                        {'dt': 'CWL', 'di': 0, 'deviceTemplateName': 'CWL_2', 'configIndex': 2, 'parameters': [
+                                {'valueId': 39001100000, 'unit': '°C', 'parameterName': 'AU Außenlufttemperatur', 'parameterId': 39001100000
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {'IsExpertView': False, 'TabName': 'Lüftung', 'GuiId': 4200, 'BundleId': 1000, 'ParameterDescriptors': [
+                        {'ValueId': 22003600000, 'SortId': 3020, 'SubBundleId': 0, 'ParameterId': 22003600000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Programmwahl Lüftung', 'Group': '355_Lüftung', 'ControlType': 35, 'Value': '3', 'ValueState': 1, 'HasDependentParameter': False, 'ClientChooseCondition': 'V[
+                                22004000000
+                            ] != 9', 'ListItems': [
+                                {'Value': '1', 'DisplayText': 'Auto', 'ImageName': 'Icon_Auto.png', 'IsSelectable': True, 'HighlightIfSelected': False, 'Description': 'Im Automatikbetrieb wird im aktiven Zeitprogramm zwischen Nennlüftung innerhalb und reduzierter Lüftung außerhalb der Schaltzeit gewechselt.'
+                                },
+                                {'Value': '2', 'DisplayText': 'Reduzierte Lüftung', 'ImageName': 'Icon_Lueftung2.png', 'IsSelectable': True, 'HighlightIfSelected': False, 'Description': 'Bei reduzierter Lüftung läuft das Lüftungsgerät permanent in Stufe 1. Das entspricht dem voreingestellten Parameter CWL2.'
+                                },
+                                {'Value': '3', 'DisplayText': 'Nennlüftung', 'ImageName': 'Icon_Lueftung3.png', 'IsSelectable': True, 'HighlightIfSelected': False, 'Description': 'Bei Nennlüftung läuft das Lüftungsgerät permanent in Stufe 2. Das entspricht dem voreingestellten Parameter CWL3.'
+                                },
+                                {'Value': '4', 'DisplayText': 'Feuchteschutz', 'ImageName': 'Icon_Lueftung1.png', 'IsSelectable': True, 'HighlightIfSelected': False, 'Description': 'Bei Feuchteschutz läuft das Lüftungsgerät permanent in Stufe 0. Das entspricht dem voreingestellten Parameter CWL1.'
+                                }
+                            ], 'MinValueCondition': '1', 'MaxValueCondition': '4', 'MinValue': 1, 'MaxValue': 4
+                        },
+                        {'ValueId': 22004000000, 'SortId': 3022, 'SubBundleId': 0, 'ParameterId': 22004000000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Anforderung Lüftung', 'Group': '355_Lüftung', 'ControlType': 1, 'Value': '4', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                {'Value': '0', 'DisplayText': 'Initialisierung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '1', 'DisplayText': 'Störung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '2', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '3', 'DisplayText': 'Reduzierte Lüftung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '4', 'DisplayText': 'Nennlüftung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '5', 'DisplayText': 'Zeitweise Intensivlüftung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '6', 'DisplayText': 'Zeitweiser Feuchteschutz', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '7', 'DisplayText': 'Automatik EIN', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '8', 'DisplayText': 'Automatik AUS', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '9', 'DisplayText': 'SmartHome', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '10', 'DisplayText': 'Feuchteschutz', 'IsSelectable': True, 'HighlightIfSelected': False
+                                }
+                            ], 'DependsOnMeVIDs': [
+                                22003600000,
+                                22003700000,
+                                22003800000,
+                                22003900000
+                            ]
+                        },
+                        {'ValueId': 22004100000, 'SortId': 3023, 'SubBundleId': 0, 'ParameterId': 22004100000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Status Lüftung', 'Group': '355_Lüftung', 'ControlType': 1, 'Value': '2', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                {'Value': '0', 'DisplayText': 'Lüftung Feuchteschutz', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '1', 'DisplayText': 'Reduzierte Lüftung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '2', 'DisplayText': 'Nennlüftung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '3', 'DisplayText': 'Intensivlüftung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                }
+                            ]
+                        },
+                        {'ValueId': 22003700000, 'SortId': 3025, 'SubBundleId': 4300, 'ParameterId': 22003700000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Zeitweise Intensivlüftung', 'Group': '355_Lüftung', 'ControlType': 24, 'Value': '0', 'ValueState': 1, 'HasDependentParameter': False, 'HintDescription': 'Ihr WOLF System lüftet gerne für Sie ordentlich durch. Geben Sie einfach die gewünschte Dauer ein.', 'ChildParameterDescriptors': [
+                                {'ValueId': 33001200000, 'SortId': 669, 'SubBundleId': 4300, 'ParameterId': 33001200000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Uhrzeit Ende', 'Group': 'StopTime', 'ControlType': 10, 'Value': '01: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Decimals': 0
+                                },
+                                {'ValueId': 33001300000, 'SortId': 670, 'SubBundleId': 4300, 'ParameterId': 33001300000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Datum Ende', 'Group': 'StopDate', 'ControlType': 9, 'Value': '01.01.2001', 'ValueState': 3, 'HasDependentParameter': False, 'Decimals': 0
+                                },
+                                {'ValueId': 33001400000, 'SortId': 671, 'SubBundleId': 4300, 'ParameterId': 33001400000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Uhrzeit Start', 'Group': 'StartTime', 'ControlType': 10, 'Value': '00: 00', 'ValueState': 3, 'HasDependentParameter': False, 'Decimals': 0
+                                },
+                                {'ValueId': 33001500000, 'SortId': 672, 'SubBundleId': 4300, 'ParameterId': 33001500000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Datum Start', 'Group': 'StartDate', 'ControlType': 9, 'Value': '01.01.2001', 'ValueState': 3, 'HasDependentParameter': False, 'Decimals': 0
+                                },
+                                {'ValueId': 33001600000, 'SortId': 673, 'SubBundleId': 4300, 'ParameterId': 33001600000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Uhrzeit BM2', 'Group': 'BM2Time', 'ControlType': 10, 'Value': '00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Decimals': 0
+                                },
+                                {'ValueId': 33001700000, 'SortId': 674, 'SubBundleId': 4300, 'ParameterId': 33001700000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Datum BM2', 'Group': 'BM2Date', 'ControlType': 9, 'Value': '01.01.2001', 'ValueState': 1, 'HasDependentParameter': False, 'Decimals': 0
+                                }
+                            ], 'PreloadChilds': True, 'ClientChooseCondition': 'V[
+                                22004000000
+                            ] != 9', 'ListItems': [
+                                {'Value': '0', 'DisplayText': 'Deaktiviert', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '1', 'DisplayText': 'Aktiviert', 'IsSelectable': True, 'HighlightIfSelected': False
+                                }
+                            ], 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1, 'ImageName': 'Icon_Lueftung4.png', 'FunctionOffMessage': 'Schlechte Luft im Raum? Lüften Sie wann immer Sie wollen kräftig durch.', 'FunctionOnMessage': 'Das zeitweise Intensivlüften ist von {
+                                0
+                            } bis {
+                                1
+                            } aktiv.'
+                        },
+                        {'ValueId': 22003800000, 'SortId': 3026, 'SubBundleId': 4400, 'ParameterId': 22003800000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Zeitweise Feuchteschutz', 'Group': '355_Lüftung', 'ControlType': 24, 'Value': '0', 'ValueState': 1, 'HasDependentParameter': False, 'HintDescription': 'Ihre WOLF Lüftung spart gerne Energie für Sie, solange Sie nicht da sind. Der integrierte Feuchteschutz ist weiterhin aktiv. Geben Sie einfach die Abwesenheitsdauer ein.', 'ChildParameterDescriptors': [
+                                {'ValueId': 33001800000, 'SortId': 675, 'SubBundleId': 4400, 'ParameterId': 33001800000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Uhrzeit Ende', 'Group': 'StopTime', 'ControlType': 10, 'Value': '03: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Decimals': 0
+                                },
+                                {'ValueId': 33001900000, 'SortId': 676, 'SubBundleId': 4400, 'ParameterId': 33001900000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Datum Ende', 'Group': 'StopDate', 'ControlType': 9, 'Value': '01.01.2001', 'ValueState': 1, 'HasDependentParameter': False, 'Decimals': 0
+                                },
+                                {'ValueId': 33002000000, 'SortId': 677, 'SubBundleId': 4400, 'ParameterId': 33002000000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Uhrzeit Start', 'Group': 'StartTime', 'ControlType': 10, 'Value': '00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Decimals': 0
+                                },
+                                {'ValueId': 33002100000, 'SortId': 678, 'SubBundleId': 4400, 'ParameterId': 33002100000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Datum Start', 'Group': 'StartDate', 'ControlType': 9, 'Value': '01.01.2001', 'ValueState': 1, 'HasDependentParameter': False, 'Decimals': 0
+                                },
+                                {'ValueId': 33002200000, 'SortId': 679, 'SubBundleId': 4400, 'ParameterId': 33002200000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Uhrzeit BM2', 'Group': 'BM2Time', 'ControlType': 10, 'Value': '00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Decimals': 0
+                                },
+                                {'ValueId': 33002300000, 'SortId': 680, 'SubBundleId': 4400, 'ParameterId': 33002300000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Datum BM2', 'Group': 'BM2Date', 'ControlType': 9, 'Value': '01.01.2001', 'ValueState': 1, 'HasDependentParameter': False, 'Decimals': 0
+                                }
+                            ], 'PreloadChilds': True, 'ClientChooseCondition': 'V[
+                                22004000000
+                            ] != 9', 'ListItems': [
+                                {'Value': '0', 'DisplayText': 'Deaktiviert', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '1', 'DisplayText': 'Aktiviert', 'IsSelectable': True, 'HighlightIfSelected': False
+                                }
+                            ], 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1, 'ImageName': 'Icon_Lueftung1.png', 'FunctionOffMessage': 'Sie sind längere Zeit aus dem Haus? Ihre WOLF Lüftung spart Energie und sorgt für den Feuchteschutz.', 'FunctionOnMessage': 'Der zeitweise Feuchteschutz ist von {
+                                0
+                            } bis {
+                                1
+                            } aktiv.'
+                        },
+                        {'ValueId': 22003900000, 'SortId': 3027, 'SubBundleId': 400, 'ParameterId': 22003900000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Zeitprogramm Lüftung', 'Group': '355_Lüftung', 'ControlType': 13, 'Value': '3', 'ValueState': 1, 'HasDependentParameter': False, 'ChildParameterDescriptors': [
+                                {'ValueId': 0, 'SortId': 0, 'SubBundleId': 400, 'ParameterId': -1, 'IsReadOnly': False, 'NoDataPoint': True, 'IsExpertProtectable': False, 'Name': 'Zeitprogramm 1', 'ControlType': 19, 'ValueState': 0, 'HasDependentParameter': False, 'ChildParameterDescriptors': [
+                                        {'ValueId': 32037800000, 'SortId': 615, 'SubBundleId': 0, 'ParameterId': 32037800000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Mo', 'Group': 'Mo', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32037900000, 'SortId': 616, 'SubBundleId': 0, 'ParameterId': 32037900000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Di', 'Group': 'Di', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32038000000, 'SortId': 617, 'SubBundleId': 0, 'ParameterId': 32038000000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Mi', 'Group': 'Mi', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32038100000, 'SortId': 618, 'SubBundleId': 0, 'ParameterId': 32038100000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Do', 'Group': 'Do', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32038200000, 'SortId': 619, 'SubBundleId': 0, 'ParameterId': 32038200000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Fr', 'Group': 'Fr', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32038300000, 'SortId': 620, 'SubBundleId': 0, 'ParameterId': 32038300000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Sa', 'Group': 'Sa', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32038400000, 'SortId': 621, 'SubBundleId': 0, 'ParameterId': 32038400000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'So', 'Group': 'So', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        }
+                                    ]
+                                },
+                                {'ValueId': 0, 'SortId': 0, 'SubBundleId': 400, 'ParameterId': -1, 'IsReadOnly': False, 'NoDataPoint': True, 'IsExpertProtectable': False, 'Name': 'Zeitprogramm 2', 'ControlType': 19, 'ValueState': 0, 'HasDependentParameter': False, 'ChildParameterDescriptors': [
+                                        {'ValueId': 32038500000, 'SortId': 622, 'SubBundleId': 0, 'ParameterId': 32038500000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Mo', 'Group': 'Mo', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32038600000, 'SortId': 623, 'SubBundleId': 0, 'ParameterId': 32038600000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Di', 'Group': 'Di', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32038700000, 'SortId': 624, 'SubBundleId': 0, 'ParameterId': 32038700000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Mi', 'Group': 'Mi', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32038800000, 'SortId': 625, 'SubBundleId': 0, 'ParameterId': 32038800000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Do', 'Group': 'Do', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32038900000, 'SortId': 626, 'SubBundleId': 0, 'ParameterId': 32038900000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Fr', 'Group': 'Fr', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32039000000, 'SortId': 627, 'SubBundleId': 0, 'ParameterId': 32039000000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Sa', 'Group': 'Sa', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32039100000, 'SortId': 628, 'SubBundleId': 0, 'ParameterId': 32039100000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'So', 'Group': 'So', 'ControlType': 14, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        }
+                                    ]
+                                },
+                                {'ValueId': 0, 'SortId': 0, 'SubBundleId': 400, 'ParameterId': -1, 'IsReadOnly': False, 'NoDataPoint': True, 'IsExpertProtectable': False, 'Name': 'Zeitprogramm 3', 'ControlType': 19, 'ValueState': 0, 'HasDependentParameter': False, 'ChildParameterDescriptors': [
+                                        {'ValueId': 32039200000, 'SortId': 629, 'SubBundleId': 0, 'ParameterId': 32039200000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Mo', 'Group': 'Mo', 'ControlType': 14, 'Value': '00: 00-23: 59;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32039300000, 'SortId': 630, 'SubBundleId': 0, 'ParameterId': 32039300000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Di', 'Group': 'Di', 'ControlType': 14, 'Value': '00: 00-23: 59;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32039400000, 'SortId': 631, 'SubBundleId': 0, 'ParameterId': 32039400000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Mi', 'Group': 'Mi', 'ControlType': 14, 'Value': '00: 00-23: 59;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32039500000, 'SortId': 632, 'SubBundleId': 0, 'ParameterId': 32039500000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Do', 'Group': 'Do', 'ControlType': 14, 'Value': '00: 00-23: 55;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32039600000, 'SortId': 633, 'SubBundleId': 0, 'ParameterId': 32039600000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Fr', 'Group': 'Fr', 'ControlType': 14, 'Value': '00: 00-23: 59;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32039700000, 'SortId': 634, 'SubBundleId': 0, 'ParameterId': 32039700000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Sa', 'Group': 'Sa', 'ControlType': 14, 'Value': '00: 00-23: 59;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        },
+                                        {'ValueId': 32039800000, 'SortId': 635, 'SubBundleId': 0, 'ParameterId': 32039800000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'So', 'Group': 'So', 'ControlType': 14, 'Value': '00: 15-23: 59;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00;00: 00-00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'Uhr', 'Decimals': 0
+                                        }
+                                    ]
+                                }
+                            ], 'ClientChooseCondition': 'V[
+                                22004000000
+                            ] != 9', 'ListItems': [
+                                {'Value': '1', 'DisplayText': '1', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '2', 'DisplayText': '2', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '3', 'DisplayText': '3', 'IsSelectable': True, 'HighlightIfSelected': False
+                                }
+                            ], 'MinValueCondition': '1', 'MaxValueCondition': '3', 'MinValue': 1, 'MaxValue': 3
+                        },
+                        {'ValueId': 0, 'SortId': 5592, 'SubBundleId': 0, 'ParameterId': 39000200000, 'IsReadOnly': True, 'NoDataPoint': True, 'IsExpertProtectable': False, 'Name': 'Typ', 'Group': '355_Lüftung', 'ControlType': 1, 'Value': '2', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                {'Value': '1', 'DisplayText': 'CWL-2-325', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '2', 'DisplayText': 'CWL-2-400', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '3', 'DisplayText': 'CWL-2-225', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '4', 'DisplayText': 'CWL-2-450', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '5', 'DisplayText': 'CWL-2-600', 'IsSelectable': True, 'HighlightIfSelected': False
+                                }
+                            ]
+                        },
+                        {'ValueId': 39000300000, 'SortId': 5593, 'SubBundleId': 0, 'ParameterId': 39000300000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Bypass Status', 'Group': '355_Lüftung', 'ProtGrp': 'CWL <0>', 'ControlType': 1, 'Value': '3', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                {'Value': '0', 'DisplayText': 'Initialisierung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '1', 'DisplayText': 'Öffnet', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '2', 'DisplayText': 'Schließt', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '3', 'DisplayText': 'Geöffnet', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '4', 'DisplayText': 'Geschlossen', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '5', 'DisplayText': 'Fehler', 'IsSelectable': True, 'HighlightIfSelected': False
+                                }
+                            ]
+                        },
+                        {'ValueId': 39000400000, 'SortId': 5594, 'SubBundleId': 0, 'ParameterId': 39000400000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Frost Status', 'Group': '355_Lüftung', 'ProtGrp': 'CWL <0>', 'ControlType': 1, 'Value': '2', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                {'Value': '0', 'DisplayText': 'Initialisierung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '1', 'DisplayText': 'Kein Frost', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '2', 'DisplayText': 'Warte', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '3', 'DisplayText': 'Vorwärmer', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '4', 'DisplayText': 'Fehler', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '5', 'DisplayText': 'Velu Heater', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '6', 'DisplayText': 'Velu fan control', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '7', 'DisplayText': 'Fan control', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '8', 'DisplayText': 'Sky150 heater', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '9', 'DisplayText': 'Fan-control Fan off', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '10', 'DisplayText': 'Fan-control Fan restart', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '11', 'DisplayText': 'Fan-control Curve 1', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '12', 'DisplayText': 'Fan-control Curve 2', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '13', 'DisplayText': 'Fan-control Curve 3', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '14', 'DisplayText': 'Fan-control Curve 4', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '15', 'DisplayText': '15', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '16', 'DisplayText': '16', 'IsSelectable': True, 'HighlightIfSelected': False
+                                }
+                            ]
+                        },
+                        {'ValueId': 39000700000, 'SortId': 5597, 'SubBundleId': 0, 'ParameterId': 39000700000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Luftdurchsatz Zuluft', 'Group': '355_Lüftung', 'ProtGrp': 'CWL <0>', 'ControlType': 6, 'Value': '382', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'm³/h', 'Decimals': 0
+                        },
+                        {'ValueId': 39000800000, 'SortId': 5598, 'SubBundleId': 0, 'ParameterId': 39000800000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Luftdurchsatz Abluft', 'Group': '355_Lüftung', 'ProtGrp': 'CWL <0>', 'ControlType': 6, 'Value': '327', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'm³/h', 'Decimals': 0
+                        },
+                        {'ValueId': 39000900000, 'SortId': 5599, 'SubBundleId': 0, 'ParameterId': 39000900000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Lüftungsstufe', 'Group': '355_Lüftung', 'ProtGrp': 'CWL <0>', 'ControlType': 0, 'Value': '3', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                {'Value': '0', 'DisplayText': 'Stufe 0', 'ImageName': 'Icon_Lueftung1.png', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '1', 'DisplayText': 'Stufe 1', 'ImageName': 'Icon_Lueftung2.png', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '2', 'DisplayText': 'Stufe 2', 'ImageName': 'Icon_Lueftung3.png', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '3', 'DisplayText': 'Stufe 3', 'ImageName': 'Icon_Lueftung4.png', 'IsSelectable': True, 'HighlightIfSelected': False
+                                }
+                            ]
+                        },
+                        {'ValueId': 39001000000, 'SortId': 5600, 'SubBundleId': 0, 'ParameterId': 39001000000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Lüftungsstufe', 'Group': '355_Lüftung', 'ControlType': 31, 'Value': '3', 'ValueState': 1, 'HasDependentParameter': False, 'MinValueCondition': '-1', 'MaxValueCondition': '3', 'MinValue': -1, 'MaxValue': 3, 'StepWidth': 1, 'Decimals': 0, 'TileParameterTagType': 5
+                        },
+                        {'ValueId': 39001100000, 'SortId': 5601, 'SubBundleId': 0, 'ParameterId': 39001100000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Außenlufttemperatur', 'Group': '355_Lüftung', 'ProtGrp': 'CWL <0>', 'ControlType': 6, 'Value': '17.8', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': '°C', 'Decimals': 1
+                        },
+                        {'ValueId': 39001400000, 'SortId': 5605, 'SubBundleId': 0, 'ParameterId': 39001400000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Vorheizregister', 'Group': '355_Lüftung', 'ProtGrp': 'CWL <0>', 'ControlType': 1, 'Value': '0', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                {'Value': '0', 'DisplayText': 'Initialisierung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '1', 'DisplayText': 'Deaktiviert', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '2', 'DisplayText': 'Aktiviert', 'IsSelectable': True, 'HighlightIfSelected': False
+                                },
+                                {'Value': '3', 'DisplayText': 'Test', 'IsSelectable': True, 'HighlightIfSelected': False
+                                }
+                            ]
+                        },
+                        {'ValueId': 39001600000, 'SortId': 5606, 'SubBundleId': 0, 'ParameterId': 39001600000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'CO2-Sensor 1', 'Group': '355_Lüftung', 'ProtGrp': 'CWL <0>', 'ControlType': 6, 'Value': '0', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'ppm', 'Decimals': 0
+                        }
+                    ], 'ViewType': 0, 'SvgSchemaDeviceId': 0, 'GetValueLastAccess': '2024-06-23T07: 58: 51.765354Z', 'TabViewGroups': [
+                        {'GroupName': 'Lüftung', 'IsTitleEditable': False
+                        }
+                    ], 'TileVisualizationType': 0, 'TileMainParameterTagType': 5
+                }
+            ]
+        },
+        {'Name': 'Fachmann', 'SubMenuEntries': [
+                {'Name': 'Bedienmodul BM-2 0', 'SubMenuEntries': [], 'ParameterNode': True, 'ImageName': 'MenuIcon_Regelung.png', 'TabViews': [
+                        {'IsExpertView': True, 'TabName': 'Einstellungen und Anzeigen', 'GuiId': 4600, 'BundleId': 4600, 'ParameterDescriptors': [
+                                {'ValueId': 22000100000, 'SortId': 2980, 'SubBundleId': 0, 'ParameterId': 22000100000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Funktion des Bedienmoduls', 'Group': '388_Einstellungen und Anzeigen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'System', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Mischermodul 1', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Mischermodul 2', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Mischermodul 3', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Mischermodul 4', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '5', 'DisplayText': 'Mischermodul 5', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '6', 'DisplayText': 'Mischermodul 6', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '7', 'DisplayText': 'Mischermodul 7', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '7', 'MinValue': 0, 'MaxValue': 7
+                                },
+                                {'ValueId': 22010300000, 'SortId': 2981, 'SubBundleId': 0, 'ParameterId': 22010300000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Außentemperatur', 'Group': '388_Einstellungen und Anzeigen', 'ProtGrp': 'BM <0>', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': '°C', 'Decimals': 1
+                                },
+                                {'ValueId': 22003200000, 'SortId': 2982, 'SubBundleId': 0, 'ParameterId': 22003200000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Uhrzeit', 'Group': '388_Einstellungen und Anzeigen', 'ControlType': 10, 'Value': '00: 00', 'ValueState': 1, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '23', 'MinValue': 0, 'MaxValue': 23, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 22003300000, 'SortId': 2983, 'SubBundleId': 0, 'ParameterId': 22003300000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Datum', 'Group': '388_Einstellungen und Anzeigen', 'ControlType': 9, 'Value': '01.01.2001', 'ValueState': 1, 'HasDependentParameter': False, 'MinValueCondition': '1', 'MaxValueCondition': '31', 'MinValue': 1, 'MaxValue': 31, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 22013400000, 'SortId': 2987, 'SubBundleId': 0, 'ParameterId': 22013400000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Firmware', 'Group': '388_Einstellungen und Anzeigen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Decimals': 2
+                                },
+                                {'ValueId': 22009100000, 'SortId': 3030, 'SubBundleId': 0, 'ParameterId': 22009100000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'SmartHome System', 'Group': '394_SmartHome Info', 'ControlType': 1, 'Value': '0', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'keine Verbindung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1357', 'DisplayText': 'alphaEOS', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2468', 'DisplayText': 'wibutler Pro', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ]
+                                }
+                            ], 'ViewType': 0, 'SvgSchemaDeviceId': 0, 'GetValueLastAccess': '2024-06-23T07: 58: 51.765354Z', 'TabViewGroups': [
+                                {'GroupName': 'Einstellungen und Anzeigen', 'IsTitleEditable': False
+                                },
+                                {'GroupName': 'SmartHome Info', 'IsTitleEditable': False
+                                }
+                            ]
+                        },
+                        {'IsExpertView': True, 'TabName': 'Parameter', 'GuiId': 5400, 'BundleId': 5400, 'ParameterDescriptors': [
+                                {'ValueId': 22002100000, 'SortId': 2988, 'SubBundleId': 0, 'ParameterId': 22002100000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Raumeinflussfaktor', 'NamePrefix': 'A00', 'Group': '400_Anlagenparameter', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'K/K', 'MinValueCondition': '1', 'MaxValueCondition': '20', 'MinValue': 1, 'MaxValue': 20, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 22002200000, 'SortId': 2989, 'SubBundleId': 0, 'ParameterId': 22002200000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Außenfühler gemittelt Berechnungszeitraum', 'NamePrefix': 'A04', 'Group': '400_Anlagenparameter', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Std', 'MinValueCondition': '0', 'MaxValueCondition': '24', 'MinValue': 0, 'MaxValue': 24, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 22011700000, 'SortId': 2990, 'SubBundleId': 0, 'ParameterId': 22011700000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Anpassung Raumfühler BM-2 0', 'NamePrefix': 'A05', 'Group': '400_Anlagenparameter', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'K', 'MinValueCondition': '-5', 'MaxValueCondition': '5', 'MinValue': -5, 'MaxValue': 5, 'StepWidth': 0.1, 'Decimals': 1
+                                },
+                                {'ValueId': 22002300000, 'SortId': 2998, 'SubBundleId': 0, 'ParameterId': 22002300000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Antilegionellenfunktion', 'NamePrefix': 'A07', 'Group': '400_Anlagenparameter', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Montag', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Dienstag', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Mittwoch', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Donnerstag', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '5', 'DisplayText': 'Freitag', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '6', 'DisplayText': 'Samstag', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '7', 'DisplayText': 'Sonntag', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '8', 'DisplayText': 'Täglich', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '8', 'MinValue': 0, 'MaxValue': 8
+                                },
+                                {'ValueId': 22010400000, 'SortId': 2999, 'SubBundleId': 0, 'ParameterId': 22010400000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Wartungsmeldung', 'NamePrefix': 'A08', 'Group': '400_Anlagenparameter', 'ControlType': 1, 'Value': '0', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Betriebsabhängig', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Datumsabhängig', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '2', 'MinValue': 0, 'MaxValue': 2
+                                },
+                                {'ValueId': 22002500000, 'SortId': 3000, 'SubBundleId': 0, 'ParameterId': 22002500000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Freigabe Parallelbetrieb', 'NamePrefix': 'A10', 'Group': '400_Anlagenparameter', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Ein', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1
+                                },
+                                {'ValueId': 22002600000, 'SortId': 3001, 'SubBundleId': 0, 'ParameterId': 22002600000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Raumtemperaturabhängige Abschaltung', 'NamePrefix': 'A11', 'Group': '400_Anlagenparameter', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Ein', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1
+                                },
+                                {'ValueId': 22002700000, 'SortId': 3002, 'SubBundleId': 0, 'ParameterId': 22002700000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Absenkstopp', 'NamePrefix': 'A12', 'Group': '400_Anlagenparameter', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': '°C', 'MinValueCondition': '-30', 'MaxValueCondition': '0', 'MinValue': -30, 'MaxValue': 0, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 22002800000, 'SortId': 3003, 'SubBundleId': 0, 'ParameterId': 22002800000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Warmwasserminimaltemperatur', 'NamePrefix': 'A13', 'Group': '400_Anlagenparameter', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': '°C', 'MinValueCondition': '25', 'MaxValueCondition': '65', 'MinValue': 25, 'MaxValue': 65, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 22012600000, 'SortId': 3004, 'SubBundleId': 0, 'ParameterId': 22012600000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Korrektur Außentemperatur', 'NamePrefix': 'A15', 'Group': '400_Anlagenparameter', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '-15', 'MaxValueCondition': '5', 'MinValue': -15, 'MaxValue': 5, 'StepWidth': 0.1, 'Decimals': 1
+                                },
+                                {'ValueId': 22002900000, 'SortId': 3006, 'SubBundleId': 0, 'ParameterId': 22002900000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'PI-Regler Raumtemperatur Kp', 'NamePrefix': 'A17', 'Group': '400_Anlagenparameter', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'K/K', 'MinValueCondition': '1', 'MaxValueCondition': '50', 'MinValue': 1, 'MaxValue': 50, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 22003000000, 'SortId': 3008, 'SubBundleId': 0, 'ParameterId': 22003000000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'PI-Regler Raumtemperatur Tn', 'NamePrefix': 'A18', 'Group': '400_Anlagenparameter', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'K/(K*h)', 'MinValueCondition': '0.1', 'MaxValueCondition': '20', 'MinValue': 1, 'MaxValue': 20, 'StepWidth': 0.1, 'Decimals': 1
+                                },
+                                {'ValueId': 22003100000, 'SortId': 3010, 'SubBundleId': 0, 'ParameterId': 22003100000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Startzeit Antilegionellenfunktion', 'NamePrefix': 'A23', 'Group': '400_Anlagenparameter', 'ControlType': 10, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Uhr', 'MinValueCondition': '0', 'MaxValueCondition': '5947', 'MinValue': 0, 'MaxValue': 5947, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 22010800000, 'SortId': 3011, 'SubBundleId': 0, 'ParameterId': 22010800000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Programmwahlschalter gemeinsam', 'NamePrefix': 'A24', 'Group': '400_Anlagenparameter', 'ControlType': 1, 'Value': '1', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Ein', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1
+                                },
+                                {'ValueId': 22009500000, 'SortId': 3013, 'SubBundleId': 0, 'ParameterId': 22009500000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Freigabe SmartHome', 'NamePrefix': 'A26', 'Group': '400_Anlagenparameter', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Ein', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1
+                                }
+                            ], 'ViewType': 0, 'SvgSchemaDeviceId': 0, 'GetValueLastAccess': '2024-06-23T07: 58: 51.765354Z', 'TabViewGroups': [
+                                {'GroupName': 'Anlagenparameter', 'IsTitleEditable': False
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {'Name': 'Lüftungsgerät', 'SubMenuEntries': [], 'ParameterNode': True, 'ImageName': 'MenuIcon_Lueftung.png', 'TabViews': [
+                        {'IsExpertView': True, 'TabName': 'Lüftungsgerät', 'GuiId': 6100, 'BundleId': 6100, 'ParameterDescriptors': [
+                                {'ValueId': 0, 'SortId': 5592, 'SubBundleId': 0, 'ParameterId': 39000200000, 'IsReadOnly': True, 'NoDataPoint': True, 'IsExpertProtectable': False, 'Name': 'Typ', 'Group': '388_Einstellungen und Anzeigen', 'ControlType': 1, 'Value': '2', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '1', 'DisplayText': 'CWL-2-325', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'CWL-2-400', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'CWL-2-225', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'CWL-2-450', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '5', 'DisplayText': 'CWL-2-600', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ]
+                                },
+                                {'ValueId': 39000300000, 'SortId': 5593, 'SubBundleId': 0, 'ParameterId': 39000300000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Bypass Status', 'Group': '388_Einstellungen und Anzeigen', 'ProtGrp': 'CWL <0>', 'ControlType': 1, 'Value': '3', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Initialisierung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Öffnet', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Schließt', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Geöffnet', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Geschlossen', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '5', 'DisplayText': 'Fehler', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ]
+                                },
+                                {'ValueId': 39000400000, 'SortId': 5594, 'SubBundleId': 0, 'ParameterId': 39000400000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Frost Status', 'Group': '388_Einstellungen und Anzeigen', 'ProtGrp': 'CWL <0>', 'ControlType': 1, 'Value': '2', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Initialisierung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Kein Frost', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Warte', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Vorwärmer', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Fehler', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '5', 'DisplayText': 'Velu Heater', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '6', 'DisplayText': 'Velu fan control', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '7', 'DisplayText': 'Fan control', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '8', 'DisplayText': 'Sky150 heater', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '9', 'DisplayText': 'Fan-control Fan off', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '10', 'DisplayText': 'Fan-control Fan restart', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '11', 'DisplayText': 'Fan-control Curve 1', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '12', 'DisplayText': 'Fan-control Curve 2', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '13', 'DisplayText': 'Fan-control Curve 3', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '14', 'DisplayText': 'Fan-control Curve 4', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '15', 'DisplayText': '15', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '16', 'DisplayText': '16', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ]
+                                },
+                                {'ValueId': 39000500000, 'SortId': 5595, 'SubBundleId': 0, 'ParameterId': 39000500000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Zuluftdruck', 'Group': '388_Einstellungen und Anzeigen', 'ProtGrp': 'CWL <0>', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Pa', 'Decimals': 1
+                                },
+                                {'ValueId': 39000600000, 'SortId': 5596, 'SubBundleId': 0, 'ParameterId': 39000600000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Abluftdruck', 'Group': '388_Einstellungen und Anzeigen', 'ProtGrp': 'CWL <0>', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'Pa', 'Decimals': 1
+                                },
+                                {'ValueId': 39000700000, 'SortId': 5597, 'SubBundleId': 0, 'ParameterId': 39000700000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Luftdurchsatz Zuluft', 'Group': '388_Einstellungen und Anzeigen', 'ProtGrp': 'CWL <0>', 'ControlType': 6, 'Value': '382', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'm³/h', 'Decimals': 0
+                                },
+                                {'ValueId': 39000800000, 'SortId': 5598, 'SubBundleId': 0, 'ParameterId': 39000800000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Luftdurchsatz Abluft', 'Group': '388_Einstellungen und Anzeigen', 'ProtGrp': 'CWL <0>', 'ControlType': 6, 'Value': '327', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'm³/h', 'Decimals': 0
+                                },
+                                {'ValueId': 39000900000, 'SortId': 5599, 'SubBundleId': 0, 'ParameterId': 39000900000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Lüftungsstufe', 'Group': '388_Einstellungen und Anzeigen', 'ProtGrp': 'CWL <0>', 'ControlType': 0, 'Value': '3', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Stufe 0', 'ImageName': 'Icon_Lueftung1.png', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Stufe 1', 'ImageName': 'Icon_Lueftung2.png', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Stufe 2', 'ImageName': 'Icon_Lueftung3.png', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Stufe 3', 'ImageName': 'Icon_Lueftung4.png', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ]
+                                },
+                                {'ValueId': 39001400000, 'SortId': 5605, 'SubBundleId': 0, 'ParameterId': 39001400000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Vorheizregister', 'Group': '388_Einstellungen und Anzeigen', 'ProtGrp': 'CWL <0>', 'ControlType': 1, 'Value': '0', 'ValueState': 1, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Initialisierung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Deaktiviert', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Aktiviert', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Test', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ]
+                                },
+                                {'ValueId': 39001600000, 'SortId': 5606, 'SubBundleId': 0, 'ParameterId': 39001600000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'CO2-Sensor 1', 'Group': '388_Einstellungen und Anzeigen', 'ProtGrp': 'CWL <0>', 'ControlType': 6, 'Value': '0', 'ValueState': 1, 'HasDependentParameter': False, 'Unit': 'ppm', 'Decimals': 0
+                                }
+                            ], 'ViewType': 1, 'SvgSchemaDeviceId': 0, 'GetValueLastAccess': '2024-06-23T07: 58: 51.765354Z', 'SchemaTabViewConfigDTO': {'Configs': [
+                                    {'ConfigIndex': 0, 'ConfigName': '1', 'ConfigDesc': 'CWL-2-325', 'ImageName': 'Schema_CWL_Excellent_2.png', 'Parameters': [
+                                            {'PortName': '----', 'PortDesc': 'AU Außenlufttemperatur', 'ValueId': 39001100000, 'ParameterId': 39001100000, 'Value': '17.8', 'ControlType': 6, 'ValueState': 1, 'ProtGrp': 'CWL <0>', 'Unit': '°C', 'Decimals': 1, 'Name': 'Außenlufttemperatur'
+                                            },
+                                            {'PortName': '----', 'PortDesc': 'ZU Zulufttemperatur', 'ValueId': 0, 'ParameterId': 39001200000, 'ControlType': 0, 'ValueState': 0
+                                            }
+                                        ]
+                                    },
+                                    {'ConfigIndex': 1, 'ConfigName': '2', 'ConfigDesc': 'CWL-2-400', 'ImageName': 'Schema_CWL_Excellent_2.png', 'Parameters': [
+                                            {'PortName': '----', 'PortDesc': 'AU Außenlufttemperatur', 'ValueId': 39001100000, 'ParameterId': 39001100000, 'Value': '17.8', 'ControlType': 6, 'ValueState': 1, 'ProtGrp': 'CWL <0>', 'Unit': '°C', 'Decimals': 1, 'Name': 'Außenlufttemperatur'
+                                            },
+                                            {'PortName': '----', 'PortDesc': 'ZU Zulufttemperatur', 'ValueId': 0, 'ParameterId': 39001200000, 'ControlType': 0, 'ValueState': 0
+                                            }
+                                        ]
+                                    },
+                                    {'ConfigIndex': 2, 'ConfigName': '3', 'ConfigDesc': 'CWL-2-225', 'ImageName': 'Schema_CWL_Excellent_2.png', 'Parameters': [
+                                            {'PortName': '----', 'PortDesc': 'AU Außenlufttemperatur', 'ValueId': 39001100000, 'ParameterId': 39001100000, 'Value': '17.8', 'ControlType': 6, 'ValueState': 1, 'ProtGrp': 'CWL <0>', 'Unit': '°C', 'Decimals': 1, 'Name': 'Außenlufttemperatur'
+                                            },
+                                            {'PortName': '----', 'PortDesc': 'ZU Zulufttemperatur', 'ValueId': 0, 'ParameterId': 39001200000, 'ControlType': 0, 'ValueState': 0
+                                            }
+                                        ]
+                                    },
+                                    {'ConfigIndex': 3, 'ConfigName': '4', 'ConfigDesc': 'CWL-2-450', 'ImageName': 'Schema_CWL_Excellent_2.png', 'Parameters': [
+                                            {'PortName': '----', 'PortDesc': 'AU Außenlufttemperatur', 'ValueId': 39001100000, 'ParameterId': 39001100000, 'Value': '17.8', 'ControlType': 6, 'ValueState': 1, 'ProtGrp': 'CWL <0>', 'Unit': '°C', 'Decimals': 1, 'Name': 'Außenlufttemperatur'
+                                            },
+                                            {'PortName': '----', 'PortDesc': 'ZU Zulufttemperatur', 'ValueId': 0, 'ParameterId': 39001200000, 'ControlType': 0, 'ValueState': 0
+                                            }
+                                        ]
+                                    },
+                                    {'ConfigIndex': 4, 'ConfigName': '5', 'ConfigDesc': 'CWL-2-600', 'ImageName': 'Schema_CWL_Excellent_2.png', 'Parameters': [
+                                            {'PortName': '----', 'PortDesc': 'AU Außenlufttemperatur', 'ValueId': 39001100000, 'ParameterId': 39001100000, 'Value': '17.8', 'ControlType': 6, 'ValueState': 1, 'ProtGrp': 'CWL <0>', 'Unit': '°C', 'Decimals': 1, 'Name': 'Außenlufttemperatur'
+                                            },
+                                            {'PortName': '----', 'PortDesc': 'ZU Zulufttemperatur', 'ValueId': 0, 'ParameterId': 39001200000, 'ControlType': 0, 'ValueState': 0
+                                            }
+                                        ]
+                                    }
+                                ], 'ConfigComboBoxParameterDescDTO': {'ValueId': 0, 'SortId': 0, 'SubBundleId': 0, 'ParameterId': -1, 'IsReadOnly': True, 'NoDataPoint': True, 'IsExpertProtectable': False, 'Name': 'DummyReadOnlyConfig', 'ControlType': 0, 'Value': '2', 'ValueState': 0, 'HasDependentParameter': False
+                                }
+                            }, 'TabViewGroups': [
+                                {'GroupName': 'Einstellungen und Anzeigen', 'IsTitleEditable': False
+                                }
+                            ]
+                        },
+                        {'IsExpertView': True, 'TabName': 'Parameter Lüftungsgerät', 'GuiId': 6200, 'BundleId': 6200, 'ParameterDescriptors': [
+                                {'ValueId': 39002000000, 'SortId': 5611, 'SubBundleId': 0, 'ParameterId': 39002000000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Luftdurchsatz Stufe 0 (Feuchteschutz)', 'NamePrefix': 'CWL01', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'm³/h', 'MinValueCondition': '0', 'MaxValueCondition': '50', 'MinValue': 0, 'MaxValue': 50, 'StepWidth': 50, 'Decimals': 0
+                                },
+                                {'ValueId': 39002200000, 'SortId': 5616, 'SubBundleId': 0, 'ParameterId': 39002200000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Luftdurchsatz Stufe 1 (Reduz. Lüftung)', 'NamePrefix': 'CWL02', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'm³/h', 'MinValueCondition': '50', 'MaxValueCondition': '400', 'MinValue': 50, 'MaxValue': 400, 'StepWidth': 5, 'Decimals': 0
+                                },
+                                {'ValueId': 39002700000, 'SortId': 5621, 'SubBundleId': 0, 'ParameterId': 39002700000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Luftdurchsatz Stufe 2 (Nennlüftung)', 'NamePrefix': 'CWL03', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'm³/h', 'MinValueCondition': '50', 'MaxValueCondition': '400', 'MinValue': 50, 'MaxValue': 400, 'StepWidth': 5, 'Decimals': 0
+                                },
+                                {'ValueId': 39003200000, 'SortId': 5626, 'SubBundleId': 0, 'ParameterId': 39003200000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Luftdurchsatz Stufe 3 (Intens. Lüftung)', 'NamePrefix': 'CWL04', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'm³/h', 'MinValueCondition': '50', 'MaxValueCondition': '400', 'MinValue': 50, 'MaxValue': 400, 'StepWidth': 5, 'Decimals': 0
+                                },
+                                {'ValueId': 39003600000, 'SortId': 5630, 'SubBundleId': 0, 'ParameterId': 39003600000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Bypass-Temperatur', 'NamePrefix': 'CWL05', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': '°C', 'MinValueCondition': '15', 'MaxValueCondition': '35', 'MinValue': 15, 'MaxValue': 35, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 39003700000, 'SortId': 5631, 'SubBundleId': 0, 'ParameterId': 39003700000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Bypass-Hysterese', 'NamePrefix': 'CWL06', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': '°C', 'MinValueCondition': '0', 'MaxValueCondition': '5', 'MinValue': 0, 'MaxValue': 5, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 39003800000, 'SortId': 5632, 'SubBundleId': 0, 'ParameterId': 39003800000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Funktion der Bypass Klappe', 'NamePrefix': 'CWL07', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Automatische Funktion', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Bypass-Klappe geschlossen', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Bypass-Klappe geöffnet', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '2', 'MinValue': 0, 'MaxValue': 2
+                                },
+                                {'ValueId': 39004000000, 'SortId': 5634, 'SubBundleId': 0, 'ParameterId': 39004000000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'ZH + WRG', 'NamePrefix': 'CWL10', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Ein', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1
+                                },
+                                {'ValueId': 39004100000, 'SortId': 5635, 'SubBundleId': 0, 'ParameterId': 39004100000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Druckungleichgewicht zulässig', 'NamePrefix': 'CWL11', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Luftdurchsatz Zu-/Abluft gleich', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Druckungleichgewicht zulässig', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1
+                                },
+                                {'ValueId': 39004200000, 'SortId': 5636, 'SubBundleId': 0, 'ParameterId': 39004200000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Festes Druckungleichgewicht', 'NamePrefix': 'CWL12', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'm³/h', 'MinValueCondition': '-100', 'MaxValueCondition': '100', 'MinValue': -100, 'MaxValue': 100, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 39004300000, 'SortId': 5637, 'SubBundleId': 0, 'ParameterId': 39004300000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Heizregister', 'NamePrefix': 'CWL13', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Vorheizregister', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Nachheizregister', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '2', 'MinValue': 0, 'MaxValue': 2
+                                },
+                                {'ValueId': 39004400000, 'SortId': 5638, 'SubBundleId': 0, 'ParameterId': 39004400000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Temperatur Nachheizregister', 'NamePrefix': 'CWL14', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': '°C', 'MinValueCondition': '15', 'MaxValueCondition': '30', 'MinValue': 15, 'MaxValue': 30, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 39004500000, 'SortId': 5639, 'SubBundleId': 0, 'ParameterId': 39004500000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Auswahl Eingang 1', 'NamePrefix': 'CWL15', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Schließerkontakt', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': '0 - 10 V Eingang', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Öffnerkontakt', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Schaltausgang 1 (Bypass geöffnet 12 V, Bypass geschlossen 0 V)', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Schaltausgang 1 (Bypass geöffnet 0 V, Bypass geschlossen 12 V)', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '4', 'MinValue': 0, 'MaxValue': 4
+                                },
+                                {'ValueId': 39004600000, 'SortId': 5640, 'SubBundleId': 0, 'ParameterId': 39004600000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Mindestspannung Eingang 1', 'NamePrefix': 'CWL16', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'V', 'MinValueCondition': '0', 'MaxValueCondition': '10', 'MinValue': 0, 'MaxValue': 10, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 39004700000, 'SortId': 5641, 'SubBundleId': 0, 'ParameterId': 39004700000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Höchstspannung Eingang 1', 'NamePrefix': 'CWL17', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'V', 'MinValueCondition': '0', 'MaxValueCondition': '10', 'MinValue': 0, 'MaxValue': 10, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 39004800000, 'SortId': 5642, 'SubBundleId': 0, 'ParameterId': 39004800000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Bedingungen Schalteingang 1', 'NamePrefix': 'CWL18', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Ein', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Ein, sofern Bedingungen Bypass geöffnet erfüllt', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Bypass-Ansteuerung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Schlafzimmerklappe', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '4', 'MinValue': 0, 'MaxValue': 4
+                                },
+                                {'ValueId': 39004900000, 'SortId': 5643, 'SubBundleId': 0, 'ParameterId': 39004900000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Zuluftventilator-Modus Schalteingang 1', 'NamePrefix': 'CWL19', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Zuluftventilator aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Absoluter Mind.durchsatz 50 m³/h', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Luftdurchsatz Stufe 1', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Luftdurchsatz Stufe 2', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Luftdurchsatz Stufe 3', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '5', 'DisplayText': 'Stufenschalter', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '6', 'DisplayText': 'Max. Luftdurchsatz', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '7', 'DisplayText': 'Keine Ansteuerung Zuluftventilator', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '7', 'MinValue': 0, 'MaxValue': 7
+                                },
+                                {'ValueId': 39005000000, 'SortId': 5644, 'SubBundleId': 0, 'ParameterId': 39005000000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Abluftventilator-Modus Schalteingang 1', 'NamePrefix': 'CWL20', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Abluftventilator aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Absoluter Mind.durchsatz 50 m³/h', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Luftdurchsatz Stufe 1', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Luftdurchsatz Stufe 2', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Luftdurchsatz Stufe 3', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '5', 'DisplayText': 'Stufenschalter', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '6', 'DisplayText': 'Max. Luftdurchsatz', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '7', 'DisplayText': 'Keine Ansteuerung Abluftventilator', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '7', 'MinValue': 0, 'MaxValue': 7
+                                },
+                                {'ValueId': 39005100000, 'SortId': 5645, 'SubBundleId': 0, 'ParameterId': 39005100000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Auswahl Eingang 2', 'NamePrefix': 'CWL21', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Schließerkontakt', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': '0 - 10 V Eingang', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Öffnerkontakt', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Schaltausgang 2 (Bypass geöffnet 12 V, Bypass geschlossen 0 V)', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Schaltausgang 2 (Bypass geöffnet 0 V, Bypass geschlossen 12 V)', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '4', 'MinValue': 0, 'MaxValue': 4
+                                },
+                                {'ValueId': 39005200000, 'SortId': 5646, 'SubBundleId': 0, 'ParameterId': 39005200000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Mindestspannung Eingang 2', 'NamePrefix': 'CWL22', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'V', 'MinValueCondition': '0', 'MaxValueCondition': '10', 'MinValue': 0, 'MaxValue': 10, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 39005300000, 'SortId': 5647, 'SubBundleId': 0, 'ParameterId': 39005300000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Höchstspannung Eingang 2', 'NamePrefix': 'CWL23', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': 'V', 'MinValueCondition': '0', 'MaxValueCondition': '10', 'MinValue': 0, 'MaxValue': 10, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 39005400000, 'SortId': 5648, 'SubBundleId': 0, 'ParameterId': 39005400000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Bedingungen Schalteingang 2', 'NamePrefix': 'CWL24', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Ein', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Ein, sofern Bedingungen Bypass geöffnet erfüllt', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Bypass-Ansteuerung', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Schlafzimmerklappe', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '4', 'MinValue': 0, 'MaxValue': 4
+                                },
+                                {'ValueId': 39005500000, 'SortId': 5649, 'SubBundleId': 0, 'ParameterId': 39005500000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Zuluftventilator-Modus Schalteingang 2', 'NamePrefix': 'CWL25', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Zuluftventilator aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Absoluter Mind.durchsatz 50 m³/h', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Luftdurchsatz Stufe 1', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Luftdurchsatz Stufe 2', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Luftdurchsatz Stufe 3', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '5', 'DisplayText': 'Stufenschalter', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '6', 'DisplayText': 'Max. Luftdurchsatz', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '7', 'DisplayText': 'Keine Ansteuerung Zuluftventilator', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '7', 'MinValue': 0, 'MaxValue': 7
+                                },
+                                {'ValueId': 39005600000, 'SortId': 5650, 'SubBundleId': 0, 'ParameterId': 39005600000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Abluftventilator-Modus Schalteingang 2', 'NamePrefix': 'CWL26', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Abluftventilator aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Absoluter Mind.durchsatz 50 m³/h', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Luftdurchsatz Stufe 1', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Luftdurchsatz Stufe 2', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Luftdurchsatz Stufe 3', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '5', 'DisplayText': 'Stufenschalter', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '6', 'DisplayText': 'Max. Luftdurchsatz', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '7', 'DisplayText': 'Keine Ansteuerung Abluftventilator', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '7', 'MinValue': 0, 'MaxValue': 7
+                                },
+                                {'ValueId': 39005700000, 'SortId': 5651, 'SubBundleId': 0, 'ParameterId': 39005700000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Erdwärmetauscher', 'NamePrefix': 'CWL27', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Ventilsteuerung Erdwärmetauscher Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Ventilsteuerung Erdwärmetauscher Ein', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1
+                                },
+                                {'ValueId': 39005800000, 'SortId': 5652, 'SubBundleId': 0, 'ParameterId': 39005800000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Mindesttemperatur Erdwärmetauscher', 'NamePrefix': 'CWL28', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': '°C', 'MinValueCondition': '0', 'MaxValueCondition': '10', 'MinValue': 0, 'MaxValue': 10, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 39005900000, 'SortId': 5653, 'SubBundleId': 0, 'ParameterId': 39005900000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Höchsttemperatur Erdwärmetauscher', 'NamePrefix': 'CWL29', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': '°C', 'MinValueCondition': '15', 'MaxValueCondition': '40', 'MinValue': 15, 'MaxValue': 40, 'StepWidth': 0.5, 'Decimals': 1
+                                },
+                                {'ValueId': 39006000000, 'SortId': 5654, 'SubBundleId': 0, 'ParameterId': 39006000000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'RH Sensor', 'NamePrefix': 'CWL30', 'Group': '479_Einstellungen', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Aus', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Ein', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1
+                                },
+                                {'ValueId': 39006100000, 'SortId': 5655, 'SubBundleId': 0, 'ParameterId': 39006100000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'RH Sensor Empfindlichkeit', 'NamePrefix': 'CWL31', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '-2', 'MaxValueCondition': '2', 'MinValue': -2, 'MaxValue': 2, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 39007600000, 'SortId': 5668, 'SubBundleId': 0, 'ParameterId': 39007600000, 'IsReadOnly': False, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Bypass Aktivierung', 'NamePrefix': 'CWL48', 'Group': '479_Einstellungen', 'ControlType': 6, 'ValueState': 0, 'HasDependentParameter': False, 'Unit': '°C', 'MinValueCondition': '70', 'MaxValueCondition': '150', 'MinValue': 70, 'MaxValue': 150, 'StepWidth': 5, 'Decimals': 0
+                                }
+                            ], 'ViewType': 0, 'SvgSchemaDeviceId': 0, 'GetValueLastAccess': '2024-06-23T07: 58: 51.765354Z', 'TabViewGroups': [
+                                {'GroupName': 'Einstellungen', 'IsTitleEditable': False
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {'Name': 'ISM', 'SubMenuEntries': [], 'ParameterNode': True, 'ImageName': 'MenuIcon_Home.png', 'TabViews': [
+                        {'IsExpertView': True, 'TabName': 'NULL', 'GuiId': 6300, 'BundleId': 6300, 'ParameterDescriptors': [
+                                {'ValueId': 19000000000, 'SortId': 5669, 'SubBundleId': 0, 'ParameterId': 19000000000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'DHCP Aktiv', 'Group': '481_ISM', 'ControlType': 5, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 19000100000, 'SortId': 5670, 'SubBundleId': 0, 'ParameterId': 19000100000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'IP Adresse', 'Group': '481_ISM', 'ControlType': 21, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '40', 'MinValue': 0, 'MaxValue': 40
+                                },
+                                {'ValueId': 19000200000, 'SortId': 5671, 'SubBundleId': 0, 'ParameterId': 19000200000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Subnetzmaske', 'Group': '481_ISM', 'ControlType': 21, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '40', 'MinValue': 0, 'MaxValue': 40
+                                },
+                                {'ValueId': 19000300000, 'SortId': 5672, 'SubBundleId': 0, 'ParameterId': 19000300000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Default Gateway', 'Group': '481_ISM', 'ControlType': 21, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '40', 'MinValue': 0, 'MaxValue': 40
+                                },
+                                {'ValueId': 19000400000, 'SortId': 5673, 'SubBundleId': 0, 'ParameterId': 19000400000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'DNS Namensserver', 'Group': '481_ISM', 'ControlType': 21, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '40', 'MinValue': 0, 'MaxValue': 40
+                                },
+                                {'ValueId': 19000700000, 'SortId': 5674, 'SubBundleId': 0, 'ParameterId': 19000700000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'WLAN Aktiv', 'Group': '481_ISM', 'ControlType': 5, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 19001100000, 'SortId': 5675, 'SubBundleId': 0, 'ParameterId': 19001100000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'WLAN Signal', 'Group': '481_ISM', 'ControlType': 1, 'ValueState': 0, 'HasDependentParameter': False, 'ListItems': [
+                                        {'Value': '0', 'DisplayText': 'Schlecht', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '1', 'DisplayText': 'Gut', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '2', 'DisplayText': 'Sehr gut', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '3', 'DisplayText': 'Sehr gut', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        },
+                                        {'Value': '4', 'DisplayText': 'Sehr gut', 'IsSelectable': True, 'HighlightIfSelected': False
+                                        }
+                                    ], 'MinValueCondition': '0', 'MaxValueCondition': '10000', 'MinValue': 0, 'MaxValue': 10000
+                                },
+                                {'ValueId': 19001200000, 'SortId': 5676, 'SubBundleId': 0, 'ParameterId': 19001200000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Anlagenname', 'Group': '481_ISM', 'ControlType': 20, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '50', 'MinValue': 0, 'MaxValue': 50
+                                },
+                                {'ValueId': 19001400000, 'SortId': 5677, 'SubBundleId': 0, 'ParameterId': 19001400000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'ISM Seriennummer', 'Group': '481_ISM', 'ControlType': 20, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '50', 'MinValue': 0, 'MaxValue': 50
+                                },
+                                {'ValueId': 19001500000, 'SortId': 5678, 'SubBundleId': 0, 'ParameterId': 19001500000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'ISM Softwareversion', 'Group': '481_ISM', 'ControlType': 20, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '10', 'MinValue': 0, 'MaxValue': 10
+                                },
+                                {'ValueId': 19001600000, 'SortId': 5679, 'SubBundleId': 0, 'ParameterId': 19001600000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'ISM Hardwareversion', 'Group': '481_ISM', 'ControlType': 20, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '10', 'MinValue': 0, 'MaxValue': 10
+                                },
+                                {'ValueId': 19001900000, 'SortId': 5680, 'SubBundleId': 0, 'ParameterId': 19001900000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'Freigabe Internetverbindung', 'Group': '481_ISM', 'ControlType': 5, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1, 'StepWidth': 1, 'Decimals': 0
+                                },
+                                {'ValueId': 19002000000, 'SortId': 5681, 'SubBundleId': 0, 'ParameterId': 19002000000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'LAN MAC Adresse', 'Group': '481_ISM', 'ControlType': 20, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1
+                                },
+                                {'ValueId': 19002100000, 'SortId': 5682, 'SubBundleId': 0, 'ParameterId': 19002100000, 'IsReadOnly': True, 'NoDataPoint': False, 'IsExpertProtectable': False, 'Name': 'WLAN MAC Adresse', 'Group': '481_ISM', 'ControlType': 20, 'ValueState': 0, 'HasDependentParameter': False, 'MinValueCondition': '0', 'MaxValueCondition': '1', 'MinValue': 0, 'MaxValue': 1
+                                }
+                            ], 'ViewType': 0, 'SvgSchemaDeviceId': 0, 'GetValueLastAccess': '2024-06-23T07: 58: 51.765354Z', 'TabViewGroups': [
+                                {'GroupName': 'ISM', 'IsTitleEditable': False
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ], 'ParameterNode': False, 'ImageName': '1348598730_Service Manager.png', 'TabViews': []
+        }
+    ], 'DynFaultMessageDevices': [], 'SystemHasWRSClassicDevices': True
+}
