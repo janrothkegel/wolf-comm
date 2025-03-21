@@ -11,7 +11,7 @@ from httpx import Headers
 from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, RPM, FLOW, FREQUENCY, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
-    LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES
+    LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES, ISREADONLY
 from wolf_comm.create_session import create_session, update_session
 from wolf_comm.helpers import bearer_header
 from wolf_comm.models import Temperature, Parameter, SimpleParameter, Device, Pressure, ListItemParameter, \
@@ -29,7 +29,8 @@ class WolfClient:
     last_failed: bool
     last_session_refesh: Optional[datetime.datetime]
     language: Optional[dict]
-    region_set: str = "en"
+    region_set: str
+    expert_mode: bool
 
     @property
     def client(self):
@@ -40,7 +41,7 @@ class WolfClient:
         else:
             raise RuntimeError("No valid client configuration")
 
-    def __init__(self, username: str, password: str, region=None, client=None, client_lambda=None):
+    def __init__(self, username: str, password: str, expert_p=None, region=None, client=None, client_lambda=None):
         if client is not None and client_lambda is not None:
             raise RuntimeError("Only one of client and client_lambda is allowed!")
         elif client is not None:
@@ -57,7 +58,7 @@ class WolfClient:
         self.last_failed = False
         self.last_session_refesh = None
         self.language = None
-
+        self.expert_mode = expert_p if expert_p is not None else False
         self.region_set = region if region is not None else "en"
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
@@ -141,6 +142,7 @@ class WolfClient:
 
         descriptors = WolfClient._extract_parameter_descriptors(answer)
         _LOGGER.debug("Found parameter descriptors: %s", len(descriptors))
+        descriptors.sort(key=lambda x: x['ValueId'])
 
         mapped = [WolfClient._map_parameter(p, None) for p in descriptors]
 
@@ -157,14 +159,22 @@ class WolfClient:
             "get", "api/portal/GetGuiDescriptionForGateway", params=payload
         )
         _LOGGER.debug("Fetched parameters: %s", desc)
-        tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
-
-        result = [WolfClient._map_view(view) for view in tab_views]
+        if self.expert_mode:
+            descriptors = WolfClient._extract_parameter_descriptors(desc)
+            _LOGGER.debug("Found parameter descriptors: %s", len(descriptors))
+            descriptors.sort(key=lambda x: x['ValueId'])
+            result = [[WolfClient._map_parameter(p, None) for p in descriptors]]
+        else:
+            tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
+            result = [WolfClient._map_view(view) for view in tab_views]
         result.reverse()
         distinct_ids = []
         flattened = []
         for sublist in result:
             for val in sublist:
+                if val is None:
+                    _LOGGER.debug("Encountered None value in parameters")
+                    continue
                 spaceSplit = val.name.split(SPLIT, 2)
                 if len(spaceSplit) == 2:
                     key = (
@@ -198,14 +208,17 @@ class WolfClient:
         seen = set()
         new_parameters = []
         for parameter in parameters:
-            if parameter.name not in seen:
+            if parameter is None:
+                _LOGGER.debug("Encountered None value in parameters")
+                continue                
+            if parameter.value_id not in seen:
                 new_parameters.append(parameter)
-                seen.add(parameter.name)
-                _LOGGER.debug("Adding parameter: %s", parameter.name)
+                seen.add(parameter.value_id)
+                _LOGGER.debug("Adding parameter: %s", parameter.value_id)
             else:
                 _LOGGER.debug(
                     "Duplicated parameter found: %s. Skipping this parameter",
-                    parameter.name,
+                    parameter.value_id,
                 )
         return new_parameters
 
@@ -270,32 +283,45 @@ class WolfClient:
 
     # api/portal/GetParameterValues
     async def fetch_value(self, gateway_id, system_id, parameters: list[Parameter]):
-        data = {
-            BUNDLE_ID: 1000,
-            BUNDLE: False,
-            VALUE_ID_LIST: [param.value_id for param in parameters],
-            GATEWAY_ID: gateway_id,
-            SYSTEM_ID: system_id,
-            GUI_ID_CHANGED: False,
-            SESSION_ID: self.session_id,
-            LAST_ACCESS: self.last_access,
-        }
-        res = await self.__request(
-            "post",
-            "api/portal/GetParameterValues",
-            json=data,
-            headers={"Content-Type": "application/json"},
-        )
+          # group requested parametes by bundle_id to do a single request per bundle_id
+        values_combined = []
+        bundles = {}
+        for param in parameters:
+            if param.bundle_id not in bundles:
+                bundles[param.bundle_id] = []
+            bundles[param.bundle_id].append(param)
 
-        if ERROR_CODE in res or ERROR_TYPE in res:
-            if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
-                raise ParameterReadError(res)
-            raise FetchFailed(res)
+        for bundle_id in bundles:
+            if len(bundles[bundle_id]) == 0:
+                continue
+            data = {
+                    BUNDLE_ID: bundle_id,
+                    BUNDLE: False,
+                    VALUE_ID_LIST: [param.value_id for param in parameters],
+                    GATEWAY_ID: gateway_id,
+                    SYSTEM_ID: system_id,
+                    GUI_ID_CHANGED: False,
+                    SESSION_ID: self.session_id,
+                    LAST_ACCESS: self.last_access,
+                }
+            _LOGGER.debug('Requesting %s values for BUNDLE_ID: %s', len(bundles[bundle_id]), bundle_id)
+                
+            res = await self.__request("post","api/portal/GetParameterValues",json=data,headers={"Content-Type": "application/json"})
+
+            if ERROR_CODE in res or ERROR_TYPE in res:
+                    if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
+                        raise ParameterReadError(res)
+                    raise FetchFailed(res)
+                
+            values_with_value = [Value(v[VALUE_ID], v[VALUE], v[STATE]) for v in res[VALUES] if VALUE in v]
+            values_combined += values_with_value 
 
         self.last_access = res[LAST_ACCESS]
-        return [
-            Value(v[VALUE_ID], v[VALUE], v[STATE]) for v in res[VALUES] if VALUE in v
-        ]
+        _LOGGER.debug('requested values for %s parameters, got values for %s ', len(parameters), len(values_combined))
+        return values_combined
+        #return [
+        #    Value(v[VALUE_ID], v[VALUE], v[STATE]) for v in res[VALUES] if VALUE in v
+        #]
 
     # api/portal/WriteParameterValues
     async def write_value(self, gateway_id, system_id, Value):
@@ -328,42 +354,38 @@ class WolfClient:
 
     @staticmethod
     def _map_parameter(parameter: dict, parent: str) -> Parameter:
-        group = ""
-        if GROUP in parameter:
-            group = parameter[GROUP] + SPLIT
-            
         value_id = parameter[VALUE_ID]
-        name = group + parameter[NAME]
+        name = parameter[NAME]
         parameter_id = parameter[PARAMETER_ID]
 
-        bundle_id = ""
-        if BUNDLE_ID in parameter:
-            bundle_id = parameter[BUNDLE_ID]
+        bundle_id = parameter.get(BUNDLE_ID, "1000")	
+        readonly = parameter.get(ISREADONLY, True)
 
         if UNIT in parameter:
             unit = parameter[UNIT]
             if unit == CELSIUS_TEMPERATURE:
-                return Temperature(value_id, name, parent, parameter_id, bundle_id)
+                return Temperature(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == BAR:
-                return Pressure(value_id, name, parent, parameter_id, bundle_id)
+                return Pressure(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == PERCENTAGE:
-                return PercentageParameter(value_id, name, parent, parameter_id, bundle_id)
+                return PercentageParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == HOUR:
-                return HoursParameter(value_id, name, parent, parameter_id, bundle_id)
+                return HoursParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == KILOWATT:
-                return PowerParameter(value_id, name, parent, parameter_id, bundle_id)
+                return PowerParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == KILOWATTHOURS:
-                return EnergyParameter(value_id, name, parent, parameter_id, bundle_id)
+                return EnergyParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == RPM:
-                return RPMParameter(value_id, name, parent, parameter_id, bundle_id)
+                return RPMParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == FLOW:
-                return FlowParameter(value_id, name, parent, parameter_id, bundle_id)
+                return FlowParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == FREQUENCY:
-                return FrequencyParameter(value_id, name, parent, parameter_id, bundle_id)
+                return FrequencyParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
         elif LIST_ITEMS in parameter:
             items = [ListItem(list_item[VALUE], list_item[DISPLAY_TEXT]) for list_item in parameter[LIST_ITEMS]]
-            return ListItemParameter(value_id, name, parent, items, parameter_id, bundle_id)
-        return SimpleParameter(value_id, name, parent, parameter_id, bundle_id)
+            return ListItemParameter(value_id, name, parent, items, parameter_id, bundle_id, readonly)
+        else:
+            return SimpleParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
 
     @staticmethod
     def _map_view(view: dict):
@@ -391,20 +413,28 @@ class WolfClient:
     @staticmethod
     def _extract_parameter_descriptors(desc):
         # recursively traverses datastructure returned by GetGuiDescriptionForGateway API and extracts all ParameterDescriptors arrays
-        def traverse(item, path=""):
+        def traverse(item, path=''):
             # Object is a dict, crawl keys
             if type(item) is dict:
+                bundleId = None
+                if "BundleId" in item: 
+                    bundleId = item["BundleId"]
+		
                 for key in item:
                     if key == "ParameterDescriptors":
                         _LOGGER.debug("Found ParameterDescriptors at path: %s", path)
+                        # Store BundleId from parent in each item for getting values
+                        for descriptor in item[key]:
+                            descriptor["BundleId"] = bundleId
                         yield from item[key]
-                    yield from traverse(item[key], path + key + ">")
+                    yield from traverse(item[key], path + key + '>')
 
             # Object is a list, crawl list items
             elif type(item) is list:
                 i = 0
                 for a in item:
-                    yield from traverse(a, path + str(i) + ">")
+                    _LOGGER.debug("Found listitem at path: %s", path)
+                    yield from traverse(a, path + str(i) + '>')
                     i += 1
 
         return list(traverse(desc))

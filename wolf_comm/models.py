@@ -41,11 +41,16 @@ class Parameter(ABC):
 
     @property
     @abstractmethod
+    def read_only(self):
+        ...
+
+    @property
+    @abstractmethod
     def parent(self):
         ...
 
     def __str__(self) -> str:
-        return "%s -> %s[%d][%d][%d] of %s" % (self.__class__.__name__, self.name, self.parameter_id, self.bundle_id, self.value_id, self.parent)
+        return "%s -> %s[%d][%d][%s][%d] of %s" % (self.__class__.__name__, self.name, self.parameter_id, self.bundle_id, self.read_only, self.value_id, self.parent)
 
 
 class SimpleParameter(Parameter):
@@ -76,13 +81,18 @@ class SimpleParameter(Parameter):
     @property
     def bundle_id(self):
         return self._bundle_id
+    
+    @property
+    def read_only(self):
+        return self._read_only
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
 
 class UnitParameter(Parameter, ABC):
@@ -119,6 +129,10 @@ class Temperature(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
+    
+    @property
+    def read_only(self):
+        return self._read_only
 
     @value_id.setter
     def value_id(self, value_id: int):
@@ -128,12 +142,13 @@ class Temperature(UnitParameter):
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
 class Pressure(UnitParameter):
     @property
@@ -163,17 +178,22 @@ class Pressure(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
+    
+    @property
+    def read_only(self):
+        return self._read_only
 
     @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
 class HoursParameter(UnitParameter):
     @property
@@ -203,17 +223,22 @@ class HoursParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
+    
+    @property
+    def read_only(self):
+        return self._read_only
 
     @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
 class PercentageParameter(UnitParameter):
 
@@ -246,15 +271,20 @@ class PercentageParameter(UnitParameter):
         return self._bundle_id
     
     @property
+    def read_only(self):
+        return self._read_only
+    
+    @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
 class PowerParameter(UnitParameter):
 
@@ -287,15 +317,20 @@ class PowerParameter(UnitParameter):
         return self._bundle_id
     
     @property
+    def read_only(self):
+        return self._read_only
+    
+    @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
 class EnergyParameter(UnitParameter):
 
@@ -328,15 +363,20 @@ class EnergyParameter(UnitParameter):
         return self._bundle_id
     
     @property
+    def read_only(self):
+        return self._read_only
+    
+    @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
 class RPMParameter(UnitParameter):
 
@@ -367,17 +407,22 @@ class RPMParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
+    
+    @property
+    def read_only(self):
+        return self._read_only
 
     @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
 class FlowParameter(UnitParameter):
 
@@ -408,17 +453,22 @@ class FlowParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
+    
+    @property
+    def read_only(self):
+        return self._read_only
 
     @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
 class FrequencyParameter(UnitParameter):
 
@@ -449,17 +499,22 @@ class FrequencyParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
+    
+    @property
+    def read_only(self):
+        return self._read_only
 
     @property
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
 class ListItem:
     name: str
@@ -490,6 +545,10 @@ class ListItemParameter(Parameter):
     @property
     def bundle_id(self):
         return self._bundle_id
+    
+    @property
+    def read_only(self):
+        return self._read_only
 
     @property
     def name(self):
@@ -503,13 +562,14 @@ class ListItemParameter(Parameter):
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, items: list[ListItem], parameter_id: int, bundle_id: int):
+    def __init__(self, value_id: int, name: str, parent: str, items: list[ListItem], parameter_id: int, bundle_id: int, read_only: bool):
         self._value_id = value_id
         self._name = name
         self._parent = parent
         self.items = items
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
+        self._read_only = read_only
 
     def __str__(self) -> str:
         return super().__str__() + " items: " + ", ".join([item.__str__() for item in self.items])

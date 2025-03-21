@@ -16,6 +16,8 @@ GUI_ID_CHANGED = 'GuiIdChanged'
 
 BUNDLE_ID = 'BundleId'
 
+ISREADONLY = 'IsReadOnly'
+
 BUNDLE = 'IsSubBundle'
 
 VALUE_ID_LIST = 'ValueIdList'
