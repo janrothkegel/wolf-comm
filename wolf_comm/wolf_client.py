@@ -41,7 +41,7 @@ class WolfClient:
         else:
             raise RuntimeError("No valid client configuration")
 
-    def __init__(self, username: str, password: str, expert_p=False, region=None, client=None, client_lambda=None):
+    def __init__(self, username: str, password: str, expert_p=None, region=None, client=None, client_lambda=None):
         if client is not None and client_lambda is not None:
             raise RuntimeError("Only one of client and client_lambda is allowed!")
         elif client is not None:
@@ -58,7 +58,7 @@ class WolfClient:
         self.last_failed = False
         self.last_session_refesh = None
         self.language = None
-        self.expert_mode = expert_p
+        self.expert_mode = expert_p if expert_p is not None else False
         self.region_set = region if region is not None else "en"
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
