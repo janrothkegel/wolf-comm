@@ -160,7 +160,7 @@ class WolfClient:
         _LOGGER.debug("Fetched parameters: %s", desc)
         if self.expert_mode:
             descriptors =WolfClient._extract_parameter_descriptors(desc)
-            result = [WolfClient._map_parameter(p, None) for p in descriptors]
+            result = [[WolfClient._map_parameter(p, None) for p in descriptors]]
         else:
             tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
             result = [WolfClient._map_view(view) for view in tab_views]
@@ -168,9 +168,6 @@ class WolfClient:
         distinct_ids = []
         flattened = []
         for sublist in result:
-            if not isinstance(sublist, list):
-                sublist = [sublist]
-                
             for val in sublist:
                 spaceSplit = val.name.split(SPLIT, 2)
                 if len(spaceSplit) == 2:
