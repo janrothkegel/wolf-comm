@@ -168,6 +168,9 @@ class WolfClient:
         distinct_ids = []
         flattened = []
         for sublist in result:
+            if not isinstance(sublist, list):
+                sublist = [sublist]
+                
             for val in sublist:
                 spaceSplit = val.name.split(SPLIT, 2)
                 if len(spaceSplit) == 2:
