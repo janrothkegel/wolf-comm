@@ -142,6 +142,7 @@ class WolfClient:
 
         descriptors = WolfClient._extract_parameter_descriptors(answer)
         _LOGGER.debug("Found parameter descriptors: %s", len(descriptors))
+        descriptors.sort(key=lambda x: x['ValueId'])
 
         mapped = [WolfClient._map_parameter(p, None) for p in descriptors]
 
@@ -201,14 +202,14 @@ class WolfClient:
         seen = set()
         new_parameters = []
         for parameter in parameters:
-            if parameter.name not in seen:
+            if parameter.value_id not in seen:
                 new_parameters.append(parameter)
-                seen.add(parameter.name)
-                _LOGGER.debug("Adding parameter: %s", parameter.name)
+                seen.add(parameter.vakue_id)
+                _LOGGER.debug("Adding parameter: %s", parameter.value_id)
             else:
                 _LOGGER.debug(
                     "Duplicated parameter found: %s. Skipping this parameter",
-                    parameter.name,
+                    parameter.value_id,
                 )
         return new_parameters
 
@@ -344,12 +345,8 @@ class WolfClient:
 
     @staticmethod
     def _map_parameter(parameter: dict, parent: str) -> Parameter:
-        group = ""
-        if GROUP in parameter:
-            group = parameter[GROUP] + SPLIT
-            
         value_id = parameter[VALUE_ID]
-        name = group + parameter[NAME]
+        name = parameter[NAME]
         parameter_id = parameter[PARAMETER_ID]
 
         bundle_id = parameter.get(BUNDLE_ID, "1000")	
@@ -421,13 +418,14 @@ class WolfClient:
                         for descriptor in item[key]:
                             descriptor["BundleId"] = bundleId
                         yield from item[key]
-                    yield from traverse(item[key], path + key + ">")
+                    yield from traverse(item[key], path + key + '>')
 
             # Object is a list, crawl list items
             elif type(item) is list:
                 i = 0
                 for a in item:
-                    yield from traverse(a, path + str(i) + ">")
+                    _LOGGER.debug("Found listitem at path: %s", path)
+                    yield from traverse(a, path + str(i) + '>')
                     i += 1
 
         return list(traverse(desc))
