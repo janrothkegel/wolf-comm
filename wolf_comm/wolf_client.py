@@ -28,7 +28,7 @@ class WolfClient:
     last_access: Optional[datetime.datetime]
     last_failed: bool
     last_session_refesh: Optional[datetime.datetime]
-    language: Optional[dict]
+    regional: Optional[dict]
     region_set: str
     expert_mode: bool
 
@@ -57,7 +57,7 @@ class WolfClient:
         self.last_access = None
         self.last_failed = False
         self.last_session_refesh = None
-        self.language = None
+        self.regional = None
         self.expert_mode = expert_p if expert_p is not None else False
         self.region_set = region if region is not None else "en"
 
@@ -133,25 +133,6 @@ class WolfClient:
         return system_state_response[0][GATEWAY_STATE][IS_ONLINE]
 
     # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
-    async def fetch_parameters_v2(self, gateway_id, system_id) -> list[Parameter]:
-        payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
-        answer = await self.__request(
-            "get", "api/portal/GetGuiDescriptionForGateway", params=payload
-        )
-        _LOGGER.debug("Fetched parameters: %s", answer)
-
-        descriptors = WolfClient._extract_parameter_descriptors(answer)
-        _LOGGER.debug("Found parameter descriptors: %s", len(descriptors))
-        descriptors.sort(key=lambda x: x['ValueId'])
-
-        mapped = [WolfClient._map_parameter(p, None) for p in descriptors]
-
-        deduplicated = self.fix_duplicated_parameters(mapped)
-        _LOGGER.debug("Deduplicated descriptors: %s", len(deduplicated))
-
-        return deduplicated
-
-    # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
     async def fetch_parameters(self, gateway_id, system_id) -> list[Parameter]:
         await self.load_localized_json(self.region_set)
         payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
@@ -223,8 +204,8 @@ class WolfClient:
         return new_parameters
 
     def replace_with_localized_text(self, text: str):
-        if self.language is not None and text in self.language:
-            return self.language[text]
+        if self.regional is not None and text in self.regional:
+            return self.regional[text]
         return text
 
     # api/portal/CloseSystem
@@ -261,25 +242,33 @@ class WolfClient:
             return WolfClient.try_and_parse(new_text, times - 1)
 
     @staticmethod
-    async def fetch_localized_text(language: str):
-        url = f"https://www.wolf-smartset.com/js/localized-text/text.culture.{language}.js"
-
+    async def fetch_localized_text(culture: str):
         async with aiohttp.ClientSession() as session:
+            # Try requested language first
+            url = f"https://www.wolf-smartset.com/js/localized-text/text.culture.{culture}.js"
             async with session.get(url) as response:
                 if response.status == 200 or response.status == 304:
                     return await response.text()
-                else:
-                    return ""
+                
+            # Fall back to English if requested language fails
+            if culture != 'en':
+                _LOGGER.debug("Language %s not found, falling back to English", culture)
+                url = "https://www.wolf-smartset.com/js/localized-text/text.culture.en.js"
+                async with session.get(url) as response:
+                    if response.status == 200 or response.status == 304:
+                        return await response.text()
+            
+            return ""
 
-    async def load_localized_json(self, language_input: str):
-        res = await self.fetch_localized_text(language_input)
+    async def load_localized_json(self, region_input: str):
+        res = await self.fetch_localized_text(region_input)
 
         parsed_json = WolfClient.extract_messages_json(res)
 
         if parsed_json is not None:
-            self.language = parsed_json
+            self.regional = parsed_json
         else:
-            _LOGGER.error("No support for systemlanguage: %s", language_input)
+            _LOGGER.error("No support for region: %s", region_input)
 
     # api/portal/GetParameterValues
     async def fetch_value(self, gateway_id, system_id, parameters: list[Parameter]):
@@ -440,25 +429,32 @@ class WolfClient:
         return list(traverse(desc))
 
 
-class FetchFailed(Exception):
-    """Server returned 500 code with message while executing query"""
+class WolfError(Exception):
+    """Base exception class for Wolf client errors"""
+    def __init__(self, message: str, response: dict = None):
+        super().__init__(message)
+        self.response = response
 
+class FetchFailed(WolfError):
+    """Exception raised when server returns an error while fetching data"""
+    def __init__(self, message: str, response: dict = None):
+        super().__init__(f"Failed to fetch data: {message}", response)
+
+class ParameterError(WolfError):
+    """Base class for parameter-related errors"""
     pass
 
+class ParameterReadError(ParameterError):
+    """Exception raised when reading parameters fails"""
+    def __init__(self, message: str, response: dict = None):
+        super().__init__(f"Failed to read parameters: {message}", response)
 
-class ParameterReadError(Exception):
-    """Server returned RedParameterValues error"""
+class ParameterWriteError(ParameterError):
+    """Exception raised when writing parameters fails"""
+    def __init__(self, message: str, response: dict = None):
+        super().__init__(f"Failed to write parameters: {message}", response)
 
-    pass
-
-
-class WriteFailed(Exception):
-    """Server returned 500 code with message while executing query"""
-
-    pass
-
-
-class ParameterWriteError(Exception):
-    """Server returned RedParameterValues error"""
-
-    pass
+class WriteFailed(WolfError):
+    """Exception raised when server returns an error while writing data"""
+    def __init__(self, message: str, response: dict = None):
+        super().__init__(f"Failed to write data: {message}", response)
