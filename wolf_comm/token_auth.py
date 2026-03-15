@@ -39,7 +39,6 @@ class TokenAuth:
             # Generate client-sided variables for OpenID
             code_verifier, code_challenge = pkce.generate_pkce_pair()
             state = shortuuid.uuid()
-        
 
             # Retrieve verification token from WOLF website
             r = await client.get(constants.AUTHENTICATION_BASE_URL + '/Account/Login?ReturnUrl=/idsrv/connect/authorize/callback?client_id={}&redirect_uri={}/signin-callback.html&response_type=code&scope=openid%2520profile api role&state={}&code_challenge={}&code_challenge_method=S256&response_mode=query&lang=de-DE'.format(constants.AUTHENTICATION_CLIENT, constants.BASE_URL,state, code_challenge))
@@ -75,10 +74,10 @@ class TokenAuth:
                     cookies = r.cookies,
                     follow_redirects=True
                 )
-                
+
                 _LOGGER.debug('Code response: %s', r.content)
                 code = r.url.params['code']
-                
+
 
                 headers = {
                     "Cache-control": "no-cache",
@@ -104,7 +103,7 @@ class TokenAuth:
                         "grant_type": "authorization_code",
                     },
                 )
-                        
+
                 json = r.json()
                 _LOGGER.debug('Token response: %s', json)
                 if "error" in json:

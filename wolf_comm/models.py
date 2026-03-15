@@ -77,11 +77,11 @@ class SimpleParameter(Parameter):
     @property
     def parameter_id(self):
         return self._parameter_id
-    
+
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only
@@ -125,11 +125,11 @@ class Temperature(UnitParameter):
     @property
     def value_id(self):
         return self._value_id
-    
+
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only
@@ -178,7 +178,7 @@ class Pressure(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only
@@ -223,7 +223,7 @@ class HoursParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only
@@ -269,11 +269,11 @@ class PercentageParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only
-    
+
     @property
     def parent(self):
         return self._parent
@@ -315,11 +315,11 @@ class PowerParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only
-    
+
     @property
     def parent(self):
         return self._parent
@@ -361,11 +361,11 @@ class EnergyParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only
-    
+
     @property
     def parent(self):
         return self._parent
@@ -407,7 +407,7 @@ class RPMParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only
@@ -453,7 +453,7 @@ class FlowParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only
@@ -499,7 +499,7 @@ class FrequencyParameter(UnitParameter):
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only
@@ -545,7 +545,7 @@ class ListItemParameter(Parameter):
     @property
     def bundle_id(self):
         return self._bundle_id
-    
+
     @property
     def read_only(self):
         return self._read_only

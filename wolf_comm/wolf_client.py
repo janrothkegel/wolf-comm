@@ -191,7 +191,7 @@ class WolfClient:
         for parameter in parameters:
             if parameter is None:
                 _LOGGER.debug("Encountered None value in parameters")
-                continue                
+                continue
             if parameter.value_id not in seen:
                 new_parameters.append(parameter)
                 seen.add(parameter.value_id)
@@ -248,14 +248,14 @@ class WolfClient:
             async with session.get(url) as response:
                 if response.status == 200 or response.status == 304:
                     return await response.text()
-                
+
             if culture != 'en':
                 _LOGGER.debug("Culture %s not found, falling back to English", culture)
                 url = "https://www.wolf-smartset.com/js/localized-text/text.culture.en.js"
                 async with session.get(url) as response:
                     if response.status == 200 or response.status == 304:
                         return await response.text()
-            
+
             return ""
 
     async def load_localized_json(self, region_input: str):
@@ -273,7 +273,7 @@ class WolfClient:
         values_combined = []
         bundles = {}
         last_access_map = {}
-        
+
         for param in parameters:
             bundles.setdefault(param.bundle_id, []).append(param)
             last_access_map.setdefault(param.bundle_id, None)
@@ -281,18 +281,18 @@ class WolfClient:
         for bundle_id, params in bundles.items():
             if not params:
                 continue
-                
+
             data = {
                 BUNDLE_ID: bundle_id,
                 BUNDLE: False,
-                VALUE_ID_LIST: [param.value_id for param in params],  
+                VALUE_ID_LIST: [param.value_id for param in params],
                 GATEWAY_ID: gateway_id,
                 SYSTEM_ID: system_id,
                 GUI_ID_CHANGED: False,
                 SESSION_ID: self.session_id,
                 LAST_ACCESS: last_access_map[bundle_id],
             }
-            
+
             _LOGGER.debug('Requesting %s values for BUNDLE_ID: %s', len(params), bundle_id)
             res = await self.__request("post", "api/portal/GetParameterValues", json=data, headers={"Content-Type": "application/json"})
 
@@ -346,7 +346,7 @@ class WolfClient:
         name = parameter[NAME]
         parameter_id = parameter[PARAMETER_ID]
 
-        bundle_id = parameter.get(BUNDLE_ID, "1000")	
+        bundle_id = parameter.get(BUNDLE_ID, "1000")
         readonly = parameter.get(ISREADONLY, True)
 
         if UNIT in parameter:
@@ -405,9 +405,9 @@ class WolfClient:
             # Object is a dict, crawl keys
             if type(item) is dict:
                 bundleId = None
-                if "BundleId" in item: 
+                if "BundleId" in item:
                     bundleId = item["BundleId"]
-		
+
                 for key in item:
                     if key == "ParameterDescriptors":
                         _LOGGER.debug("Found ParameterDescriptors at path: %s", path)
