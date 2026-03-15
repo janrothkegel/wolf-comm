@@ -50,7 +50,15 @@ class Parameter(ABC):
         ...
 
     def __str__(self) -> str:
-        return "%s -> %s[%d][%d][%s][%d] of %s" % (self.__class__.__name__, self.name, self.parameter_id, self.bundle_id, self.read_only, self.value_id, self.parent)
+        return "%s -> %s[%d][%d][%s][%d] of %s" % (
+            self.__class__.__name__,
+            self.name,
+            self.parameter_id,
+            self.bundle_id,
+            self.read_only,
+            self.value_id,
+            self.parent
+        )
 
 
 class SimpleParameter(Parameter):
@@ -571,7 +579,16 @@ class ListItemParameter(Parameter):
     def parent(self):
         return self._parent
 
-    def __init__(self, value_id: int, name: str, parent: str, items: list[ListItem], parameter_id: int, bundle_id: int, read_only: bool):
+    def __init__(
+            self,
+            value_id: int,
+            name: str,
+            parent: str,
+            items: list[ListItem],
+            parameter_id: int,
+            bundle_id: int,
+            read_only: bool
+    ):
         self._value_id = value_id
         self._name = name
         self._parent = parent
@@ -593,4 +610,3 @@ class Value:
 
     def __str__(self) -> str:
         return 'Value id: {}, value: {}, state {}'.format(self.value_id, self.value, self.state)
-
