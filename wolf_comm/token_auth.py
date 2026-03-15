@@ -29,6 +29,8 @@ class TokenAuth:
     """Adds poosibility to login with passed credentials"""
 
     def __init__(self, username: str, password: str):
+        if len(password) > 30:
+            raise PasswordToLong(f'Your password is {len(password)} long, but maximum is 30')
         self.username = username
         self.password = password
 
@@ -117,4 +119,8 @@ class TokenAuth:
 
 class InvalidAuth(Exception):
     """Please check whether you entered an invalid username or password. If everything looks fine then probably there is an issue with Wolf SmartSet servers."""
+    pass
+
+class PasswordToLong(Exception):
+    """Please check the lenght of your provided password. Wolf SmartSet server only accept password lenght less or equal 30 characters."""
     pass
