@@ -150,6 +150,7 @@ class Temperature(UnitParameter):
         self._bundle_id = bundle_id
         self._read_only = read_only
 
+
 class Pressure(UnitParameter):
     @property
     def unit(self):
@@ -195,6 +196,7 @@ class Pressure(UnitParameter):
         self._bundle_id = bundle_id
         self._read_only = read_only
 
+
 class HoursParameter(UnitParameter):
     @property
     def unit(self):
@@ -239,6 +241,7 @@ class HoursParameter(UnitParameter):
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
         self._read_only = read_only
+
 
 class PercentageParameter(UnitParameter):
 
@@ -286,6 +289,7 @@ class PercentageParameter(UnitParameter):
         self._bundle_id = bundle_id
         self._read_only = read_only
 
+
 class PowerParameter(UnitParameter):
 
     @property
@@ -331,6 +335,7 @@ class PowerParameter(UnitParameter):
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
         self._read_only = read_only
+
 
 class EnergyParameter(UnitParameter):
 
@@ -378,6 +383,7 @@ class EnergyParameter(UnitParameter):
         self._bundle_id = bundle_id
         self._read_only = read_only
 
+
 class RPMParameter(UnitParameter):
 
     @property
@@ -423,6 +429,7 @@ class RPMParameter(UnitParameter):
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
         self._read_only = read_only
+
 
 class FlowParameter(UnitParameter):
 
@@ -470,6 +477,7 @@ class FlowParameter(UnitParameter):
         self._bundle_id = bundle_id
         self._read_only = read_only
 
+
 class FrequencyParameter(UnitParameter):
 
     @property
@@ -515,6 +523,7 @@ class FrequencyParameter(UnitParameter):
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
         self._read_only = read_only
+
 
 class ListItem:
     name: str

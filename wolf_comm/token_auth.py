@@ -116,9 +116,11 @@ class TokenAuth:
             _LOGGER.error('An error occurred: %s', e)
             raise InvalidAuth
 
+
 class InvalidAuth(Exception):
     """Please check whether you entered an invalid username or password. If everything looks fine then probably there is an issue with Wolf SmartSet servers."""
     pass
+
 
 class PasswordToLong(Exception):
     """Please check the lenght of your provided password. Wolf SmartSet server only accept password lenght less or equal 30 characters."""

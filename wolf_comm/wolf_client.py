@@ -434,24 +434,29 @@ class WolfError(Exception):
         super().__init__(message)
         self.response = response
 
+
 class FetchFailed(WolfError):
     """Exception raised when server returns an error while fetching data"""
     def __init__(self, message: str, response: dict = None):
         super().__init__(f"Failed to fetch data: {message}", response)
 
+
 class ParameterError(WolfError):
     """Base class for parameter-related errors"""
     pass
+
 
 class ParameterReadError(ParameterError):
     """Exception raised when reading parameters fails"""
     def __init__(self, message: str, response: dict = None):
         super().__init__(f"Failed to read parameters: {message}", response)
 
+
 class ParameterWriteError(ParameterError):
     """Exception raised when writing parameters fails"""
     def __init__(self, message: str, response: dict = None):
         super().__init__(f"Failed to write parameters: {message}", response)
+
 
 class WriteFailed(WolfError):
     """Exception raised when server returns an error while writing data"""

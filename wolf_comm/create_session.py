@@ -23,6 +23,7 @@ async def create_session(client: AsyncClient, token: str):
 
     return resp.json()['BrowserSessionId']
 
+
 async def update_session(client: AsyncClient, token: str, session_id: str):
     data = {
         SESSION_ID: session_id
