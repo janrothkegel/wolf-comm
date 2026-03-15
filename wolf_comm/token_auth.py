@@ -10,7 +10,6 @@ import pkce
 import shortuuid
 
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -41,7 +40,21 @@ class TokenAuth:
             state = shortuuid.uuid()
 
             # Retrieve verification token from WOLF website
-            r = await client.get(constants.AUTHENTICATION_BASE_URL + '/Account/Login?ReturnUrl=/idsrv/connect/authorize/callback?client_id={}&redirect_uri={}/signin-callback.html&response_type=code&scope=openid%2520profile api role&state={}&code_challenge={}&code_challenge_method=S256&response_mode=query&lang=de-DE'.format(constants.AUTHENTICATION_CLIENT, constants.BASE_URL,state, code_challenge))
+            r = await client.get(
+                url=f'{constants.AUTHENTICATION_BASE_URL}/Account/Login',
+                params={
+                    'ReturnUrl': '/idsrv/connect/authorize/callback',
+                    'client_id': constants.AUTHENTICATION_CLIENT,
+                    'redirect_uri': f'{constants.BASE_URL}/signin-callback.html',
+                    'response_type': 'code',
+                    'scope': 'openid profile api role',
+                    'state': state,
+                    'code_challenge': code_challenge,
+                    'code_challenge_method': 'S256',
+                    'response_mode': 'query',
+                    'lang': 'de-DE',
+                }
+            )
 
             _LOGGER.debug('Verification code response: %s', r.content)
 
@@ -52,7 +65,7 @@ class TokenAuth:
 
                 _LOGGER.debug('Verification token: %s', elements[0])
 
-                verification_token = elements[0] # __RequestVerificationToken
+                verification_token = elements[0]  # __RequestVerificationToken
 
                 # Get code
                 login_data = {
@@ -62,22 +75,30 @@ class TokenAuth:
                 }
 
                 r = await client.post(
-                    constants.AUTHENTICATION_BASE_URL + "/Account/Login",
+                    url=f'{constants.AUTHENTICATION_BASE_URL}/Account/Login',
                     params={
-                        "ReturnUrl": constants.AUTHENTICATION_URL + "/connect/authorize/callback?client_id={}&redirect_uri={}/signin-callback.html&response_type=code&scope=openid profile api role&state={}&code_challenge={}&code_challenge_method=S256&response_mode=query&lang=de-DE".format(constants.AUTHENTICATION_CLIENT, constants.BASE_URL, state,code_challenge)
+                        'ReturnUrl': f'{constants.AUTHENTICATION_URL}/connect/authorize/callback?'
+                        f'client_id={constants.AUTHENTICATION_CLIENT}'
+                        f'&redirect_uri={constants.BASE_URL}/signin-callback.html'
+                        '&response_type=code'
+                        '&scope=openid profile api role'
+                        f'&state={state}'
+                        f'&code_challenge={code_challenge}'
+                        '&code_challenge_method=S256'
+                        '&response_mode=query'
+                        '&lang=de-DE'
                     },
                     headers={
                         "Sec-Fetch-Dest": "document",
                         "Sec-Fetch-Mode": "navigate",
                     },
                     data=login_data,
-                    cookies = r.cookies,
+                    cookies=r.cookies,
                     follow_redirects=True
                 )
 
                 _LOGGER.debug('Code response: %s', r.content)
                 code = r.url.params['code']
-
 
                 headers = {
                     "Cache-control": "no-cache",
