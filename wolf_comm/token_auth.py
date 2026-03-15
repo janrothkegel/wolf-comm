@@ -10,7 +10,6 @@ import pkce
 import shortuuid
 
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -29,6 +28,8 @@ class TokenAuth:
     """Adds poosibility to login with passed credentials"""
 
     def __init__(self, username: str, password: str):
+        if len(password) > 30:
+            raise PasswordToLong(f'Your password is {len(password)} long, but maximum is 30')
         self.username = username
         self.password = password
 
@@ -37,10 +38,23 @@ class TokenAuth:
             # Generate client-sided variables for OpenID
             code_verifier, code_challenge = pkce.generate_pkce_pair()
             state = shortuuid.uuid()
-        
 
             # Retrieve verification token from WOLF website
-            r = await client.get(constants.AUTHENTICATION_BASE_URL + '/Account/Login?ReturnUrl=/idsrv/connect/authorize/callback?client_id={}&redirect_uri={}/signin-callback.html&response_type=code&scope=openid%2520profile api role&state={}&code_challenge={}&code_challenge_method=S256&response_mode=query&lang=de-DE'.format(constants.AUTHENTICATION_CLIENT, constants.BASE_URL,state, code_challenge))
+            r = await client.get(
+                url=f'{constants.AUTHENTICATION_BASE_URL}/Account/Login',
+                params={
+                    'ReturnUrl': '/idsrv/connect/authorize/callback',
+                    'client_id': constants.AUTHENTICATION_CLIENT,
+                    'redirect_uri': f'{constants.BASE_URL}/signin-callback.html',
+                    'response_type': 'code',
+                    'scope': 'openid profile api role',
+                    'state': state,
+                    'code_challenge': code_challenge,
+                    'code_challenge_method': 'S256',
+                    'response_mode': 'query',
+                    'lang': 'de-DE',
+                }
+            )
 
             _LOGGER.debug('Verification code response: %s', r.content)
 
@@ -51,7 +65,7 @@ class TokenAuth:
 
                 _LOGGER.debug('Verification token: %s', elements[0])
 
-                verification_token = elements[0] # __RequestVerificationToken
+                verification_token = elements[0]  # __RequestVerificationToken
 
                 # Get code
                 login_data = {
@@ -61,22 +75,30 @@ class TokenAuth:
                 }
 
                 r = await client.post(
-                    constants.AUTHENTICATION_BASE_URL + "/Account/Login",
+                    url=f'{constants.AUTHENTICATION_BASE_URL}/Account/Login',
                     params={
-                        "ReturnUrl": constants.AUTHENTICATION_URL + "/connect/authorize/callback?client_id={}&redirect_uri={}/signin-callback.html&response_type=code&scope=openid profile api role&state={}&code_challenge={}&code_challenge_method=S256&response_mode=query&lang=de-DE".format(constants.AUTHENTICATION_CLIENT, constants.BASE_URL, state,code_challenge)
+                        'ReturnUrl': f'{constants.AUTHENTICATION_URL}/connect/authorize/callback?'
+                        f'client_id={constants.AUTHENTICATION_CLIENT}'
+                        f'&redirect_uri={constants.BASE_URL}/signin-callback.html'
+                        '&response_type=code'
+                        '&scope=openid profile api role'
+                        f'&state={state}'
+                        f'&code_challenge={code_challenge}'
+                        '&code_challenge_method=S256'
+                        '&response_mode=query'
+                        '&lang=de-DE'
                     },
                     headers={
                         "Sec-Fetch-Dest": "document",
                         "Sec-Fetch-Mode": "navigate",
                     },
                     data=login_data,
-                    cookies = r.cookies,
+                    cookies=r.cookies,
                     follow_redirects=True
                 )
-                
+
                 _LOGGER.debug('Code response: %s', r.content)
                 code = r.url.params['code']
-                
 
                 headers = {
                     "Cache-control": "no-cache",
@@ -102,7 +124,7 @@ class TokenAuth:
                         "grant_type": "authorization_code",
                     },
                 )
-                        
+
                 json = r.json()
                 _LOGGER.debug('Token response: %s', json)
                 if "error" in json:
@@ -115,6 +137,12 @@ class TokenAuth:
             _LOGGER.error('An error occurred: %s', e)
             raise InvalidAuth
 
+
 class InvalidAuth(Exception):
     """Please check whether you entered an invalid username or password. If everything looks fine then probably there is an issue with Wolf SmartSet servers."""
+    pass
+
+
+class PasswordToLong(Exception):
+    """Please check the lenght of your provided password. Wolf SmartSet server only accept password lenght less or equal 30 characters."""
     pass
