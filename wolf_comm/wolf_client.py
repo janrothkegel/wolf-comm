@@ -1,15 +1,13 @@
-import datetime
 import json
 import logging
 import re
-from typing import Union, Optional
+from datetime import datetime, timedelta
 
 import aiohttp
 import httpx
-from httpx import Headers
 
 from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
-    BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
+    BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, RPM, FLOW, FREQUENCY, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
     LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES, ISREADONLY
 from wolf_comm.create_session import create_session, update_session
@@ -23,14 +21,15 @@ SPLIT = "---"
 
 
 class WolfClient:
-    session_id: Optional[int]
-    tokens: Optional[Tokens]
-    last_access: Optional[datetime.datetime]
+    session_id: int | None
+    tokens: Tokens | None
+    last_access: datetime | None
     last_failed: bool
-    last_session_refesh: Optional[datetime.datetime]
-    regional: Optional[dict]
+    last_session_refesh: datetime | None
+    regional: dict | None
     region_set: str
     expert_mode: bool
+    _websession: aiohttp.ClientSession | None
 
     @property
     def client(self):
@@ -41,7 +40,7 @@ class WolfClient:
         else:
             raise RuntimeError("No valid client configuration")
 
-    def __init__(self, username: str, password: str, expert_p=None, region=None, client=None, client_lambda=None):
+    def __init__(self, username: str, password: str, expert_p=None, region=None, client=None, client_lambda=None, websession: aiohttp.ClientSession | None = None):
         if client is not None and client_lambda is not None:
             raise RuntimeError("Only one of client and client_lambda is allowed!")
         elif client is not None:
@@ -51,6 +50,7 @@ class WolfClient:
         else:
             self._client = httpx.AsyncClient()
 
+        self._websession = websession
         self.tokens = None
         self.token_auth = TokenAuth(username, password)
         self.session_id = None
@@ -61,19 +61,20 @@ class WolfClient:
         self.expert_mode = expert_p if expert_p is not None else False
         self.region_set = region if region is not None else "en"
 
-    async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
+    async def __request(self, method: str, path: str, **kwargs) -> dict | list:
         if self.tokens is None or self.tokens.is_expired():
             await self.__authorize_and_session()
 
+        assert self.tokens is not None
         headers = kwargs.get("headers", {})
         headers = {**bearer_header(self.tokens.access_token), **headers}
 
         if (
             self.last_session_refesh is None
-            or self.last_session_refesh <= datetime.datetime.now()
+            or self.last_session_refesh <= datetime.now()
         ):
-            await update_session(self.client, self.tokens.access_token, self.session_id)
-            self.last_session_refesh = datetime.datetime.now() + datetime.timedelta(
+            await update_session(self.client, self.tokens.access_token, str(self.session_id))
+            self.last_session_refesh = datetime.now() + timedelta(
                 seconds=60
             )
             _LOGGER.debug("Session ID: %s extended", self.session_id)
@@ -86,6 +87,7 @@ class WolfClient:
         if resp.status_code in {401, 500}:
             _LOGGER.info("Retrying failed request (status code %d)", resp.status_code)
             await self.__authorize_and_session()
+            assert self.tokens is not None
             headers = {**bearer_header(self.tokens.access_token), **dict(headers)}
             try:
                 execution = await self.__execute(headers, kwargs, method, path)
@@ -101,13 +103,14 @@ class WolfClient:
         return await self.client.request(
             method,
             f"{BASE_URL_PORTAL}/{path}",
-            **dict(kwargs, headers=Headers(headers)),
+            headers=headers,
+            **kwargs,
         )
 
     async def __authorize_and_session(self):
         self.tokens = await self.token_auth.token(self.client)
         self.session_id = await create_session(self.client, self.tokens.access_token)
-        self.last_session_refesh = datetime.datetime.now() + datetime.timedelta(
+        self.last_session_refesh = datetime.now() + timedelta(
             seconds=60
         )
 
@@ -121,7 +124,7 @@ class WolfClient:
         ]
 
     # api/portal/GetSystemStateList
-    async def fetch_system_state_list(self, system_id, gateway_id) -> bool:
+    async def fetch_system_state_list(self, system_id: int, gateway_id: int) -> bool:
         payload = {
             SESSION_ID: self.session_id,
             SYSTEM_LIST: [{SYSTEM_ID: system_id, GATEWAY_ID: gateway_id}],
@@ -133,7 +136,7 @@ class WolfClient:
         return system_state_response[0][GATEWAY_STATE][IS_ONLINE]
 
     # api/portal/GetGuiDescriptionForGateway?GatewayId={gateway_id}&SystemId={system_id}
-    async def fetch_parameters(self, gateway_id, system_id) -> list[Parameter]:
+    async def fetch_parameters(self, gateway_id: int, system_id: int) -> list[Parameter]:
         await self.load_localized_json(self.region_set)
         payload = {GATEWAY_ID: gateway_id, SYSTEM_ID: system_id}
         desc = await self.__request(
@@ -144,8 +147,10 @@ class WolfClient:
             descriptors = WolfClient._extract_parameter_descriptors(desc)
             _LOGGER.debug("Found parameter descriptors: %s", len(descriptors))
             descriptors.sort(key=lambda x: x['ValueId'])
-            result = [[WolfClient._map_parameter(p, None) for p in descriptors]]
+            result = [[WolfClient._map_parameter(p, "") for p in descriptors]]
         else:
+            if not isinstance(desc, dict):
+                raise FetchFailed(f"Unexpected response type: {type(desc)}")
             tab_views = desc[MENU_ITEMS][0][TAB_VIEWS]
             result = [WolfClient._map_view(view) for view in tab_views]
         result.reverse()
@@ -184,7 +189,7 @@ class WolfClient:
         flattened_fixed = self.fix_duplicated_parameters(flattened)
         return flattened_fixed
 
-    def fix_duplicated_parameters(self, parameters):
+    def fix_duplicated_parameters(self, parameters: list[Parameter]) -> list[Parameter]:
         """Fix duplicated parameters."""
         seen = set()
         new_parameters = []
@@ -203,19 +208,19 @@ class WolfClient:
                 )
         return new_parameters
 
-    def replace_with_localized_text(self, text: str):
+    def replace_with_localized_text(self, text: str) -> str:
         if self.regional is not None and text in self.regional:
             return self.regional[text]
         return text
 
     # api/portal/CloseSystem
-    async def close_system(self):
+    async def close_system(self) -> None:
         data = {SESSION_ID: self.session_id}
         res = await self.__request("post", "api/portal/CloseSystem", json=data)
         _LOGGER.debug("Close system response: %s", res)
 
     @staticmethod
-    def extract_messages_json(text):
+    def extract_messages_json(text: str) -> dict | None:
         json_match = re.search(r"messages:\s*({.*?})\s*}", text, re.DOTALL)
 
         if json_match:
@@ -225,9 +230,9 @@ class WolfClient:
             return None
 
     @staticmethod
-    def try_and_parse(text, times):
+    def try_and_parse(text: str, times: int) -> dict | None:
         if times == 0:
-            return text
+            return None
         try:
             return json.loads(text)
         except json.JSONDecodeError as e:
@@ -242,24 +247,29 @@ class WolfClient:
             return WolfClient.try_and_parse(new_text, times - 1)
 
     @staticmethod
-    async def fetch_localized_text(culture: str):
-        async with aiohttp.ClientSession() as session:
+    async def fetch_localized_text(culture: str, websession: aiohttp.ClientSession | None = None) -> str:
+        async def _fetch(session: aiohttp.ClientSession) -> str:
             url = f"https://www.wolf-smartset.com/js/localized-text/text.culture.{culture}.js"
             async with session.get(url) as response:
-                if response.status == 200 or response.status == 304:
+                if response.status in {200, 304}:
                     return await response.text()
 
             if culture != 'en':
                 _LOGGER.debug("Culture %s not found, falling back to English", culture)
                 url = "https://www.wolf-smartset.com/js/localized-text/text.culture.en.js"
                 async with session.get(url) as response:
-                    if response.status == 200 or response.status == 304:
+                    if response.status in {200, 304}:
                         return await response.text()
 
             return ""
 
-    async def load_localized_json(self, region_input: str):
-        res = await self.fetch_localized_text(region_input)
+        if websession is not None:
+            return await _fetch(websession)
+        async with aiohttp.ClientSession() as session:
+            return await _fetch(session)
+
+    async def load_localized_json(self, region_input: str) -> None:
+        res = await self.fetch_localized_text(region_input, self._websession)
 
         parsed_json = WolfClient.extract_messages_json(res)
 
@@ -269,7 +279,7 @@ class WolfClient:
             _LOGGER.error("No support for region: %s", region_input)
 
     # api/portal/GetParameterValues
-    async def fetch_value(self, gateway_id, system_id, parameters: list[Parameter]):
+    async def fetch_value(self, gateway_id: int, system_id: int, parameters: list[Parameter]) -> list[Value]:
         values_combined = []
         bundles = {}
         last_access_map = {}
@@ -296,6 +306,9 @@ class WolfClient:
             _LOGGER.debug('Requesting %s values for BUNDLE_ID: %s', len(params), bundle_id)
             res = await self.__request("post", "api/portal/GetParameterValues", json=data, headers={"Content-Type": "application/json"})
 
+            if not isinstance(res, dict):
+                raise FetchFailed(f"Unexpected response type: {type(res)}")
+
             if ERROR_CODE in res or ERROR_TYPE in res:
                 error_msg = f"Error {res.get(ERROR_CODE, '')}: {res.get(ERROR_MESSAGE, str(res))}"
                 if ERROR_MESSAGE in res and res[ERROR_MESSAGE] == ERROR_READ_PARAMETER:
@@ -313,7 +326,7 @@ class WolfClient:
         return values_combined
 
     # api/portal/WriteParameterValues
-    async def write_value(self, gateway_id, system_id, bundle_id, Value):
+    async def write_value(self, gateway_id: int, system_id: int, bundle_id: int, Value: dict) -> dict:
         data = {
             WRITE_PARAMETER_VALUES: [
                 {"ValueId": Value[VALUE_ID], "Value": Value[STATE]}
@@ -331,6 +344,9 @@ class WolfClient:
         )
 
         _LOGGER.debug("Written values: %s", res)
+
+        if not isinstance(res, dict):
+            raise WriteFailed(f"Unexpected response type: {type(res)}")
 
         if ERROR_CODE in res or ERROR_TYPE in res:
             error_msg = f"Error {res.get(ERROR_CODE, '')}: {res.get(ERROR_MESSAGE, str(res))}"
@@ -369,6 +385,8 @@ class WolfClient:
                 return FlowParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == FREQUENCY:
                 return FrequencyParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
+            else:
+                return SimpleParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
         elif LIST_ITEMS in parameter:
             items = [ListItem(list_item[VALUE], list_item[DISPLAY_TEXT]) for list_item in parameter[LIST_ITEMS]]
             return ListItemParameter(value_id, name, parent, items, parameter_id, bundle_id, readonly)
@@ -376,7 +394,7 @@ class WolfClient:
             return SimpleParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
 
     @staticmethod
-    def _map_view(view: dict):
+    def _map_view(view: dict) -> list[Parameter]:
         if "SVGHeatingSchemaConfigDevices" in view:
             units = dict(
                 [
@@ -399,11 +417,11 @@ class WolfClient:
             ]
 
     @staticmethod
-    def _extract_parameter_descriptors(desc):
+    def _extract_parameter_descriptors(desc: dict | list) -> list[dict]:
         # recursively traverses datastructure returned by GetGuiDescriptionForGateway API and extracts all ParameterDescriptors arrays
         def traverse(item, path=''):
             # Object is a dict, crawl keys
-            if type(item) is dict:
+            if isinstance(item, dict):
                 bundleId = None
                 if "BundleId" in item:
                     bundleId = item["BundleId"]
@@ -418,7 +436,7 @@ class WolfClient:
                     yield from traverse(item[key], path + key + '>')
 
             # Object is a list, crawl list items
-            elif type(item) is list:
+            elif isinstance(item, list):
                 i = 0
                 for a in item:
                     _LOGGER.debug("Found listitem at path: %s", path)
@@ -429,36 +447,40 @@ class WolfClient:
 
 
 class WolfError(Exception):
-    """Base exception class for Wolf client errors"""
-    def __init__(self, message: str, response: dict = None):
+    """Base exception class for Wolf client errors."""
+
+    def __init__(self, message: str, response: dict | None = None) -> None:
         super().__init__(message)
         self.response = response
 
 
 class FetchFailed(WolfError):
-    """Exception raised when server returns an error while fetching data"""
-    def __init__(self, message: str, response: dict = None):
+    """Exception raised when server returns an error while fetching data."""
+
+    def __init__(self, message: str, response: dict | None = None) -> None:
         super().__init__(f"Failed to fetch data: {message}", response)
 
 
 class ParameterError(WolfError):
-    """Base class for parameter-related errors"""
-    pass
+    """Base class for parameter-related errors."""
 
 
 class ParameterReadError(ParameterError):
-    """Exception raised when reading parameters fails"""
-    def __init__(self, message: str, response: dict = None):
+    """Exception raised when reading parameters fails."""
+
+    def __init__(self, message: str, response: dict | None = None) -> None:
         super().__init__(f"Failed to read parameters: {message}", response)
 
 
 class ParameterWriteError(ParameterError):
-    """Exception raised when writing parameters fails"""
-    def __init__(self, message: str, response: dict = None):
+    """Exception raised when writing parameters fails."""
+
+    def __init__(self, message: str, response: dict | None = None) -> None:
         super().__init__(f"Failed to write parameters: {message}", response)
 
 
 class WriteFailed(WolfError):
-    """Exception raised when server returns an error while writing data"""
-    def __init__(self, message: str, response: dict = None):
+    """Exception raised when server returns an error while writing data."""
+
+    def __init__(self, message: str, response: dict | None = None) -> None:
         super().__init__(f"Failed to write data: {message}", response)

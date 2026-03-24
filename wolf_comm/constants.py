@@ -1,6 +1,20 @@
 """
 File with all constants
 """
+from enum import Enum
+
+
+class ParameterUnit(str, Enum):
+    CELSIUS = "°C"
+    BAR = "bar"
+    PERCENTAGE = "%"
+    HOUR = "Std"
+    KILOWATT = "kW"
+    KILOWATTHOURS = "kWh"
+    RPM = "U/min"
+    FLOW = "l/min"
+    FREQUENCY = "Hz"
+
 
 BASE_URL = "https://www.wolf-smartset.com"
 
@@ -48,23 +62,23 @@ ERROR_MESSAGE = 'Message'
 
 NAME = 'Name'
 
-PERCENTAGE = '%'
+PERCENTAGE = ParameterUnit.PERCENTAGE
 
-HOUR = 'Std'
+HOUR = ParameterUnit.HOUR
 
-KILOWATT = 'kW'
+KILOWATT = ParameterUnit.KILOWATT
 
-KILOWATTHOURS = 'kWh'
+KILOWATTHOURS = ParameterUnit.KILOWATTHOURS
 
-BAR = 'bar'
+BAR = ParameterUnit.BAR
 
-RPM = 'U/min'
+RPM = ParameterUnit.RPM
 
-FLOW = 'l/min'
+FLOW = ParameterUnit.FLOW
 
-FREQUENCY = 'Hz'
+FREQUENCY = ParameterUnit.FREQUENCY
 
-CELSIUS_TEMPERATURE = '°C'
+CELSIUS_TEMPERATURE = ParameterUnit.CELSIUS
 
 VALUES = 'Values'
 
