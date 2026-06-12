@@ -151,3 +151,5 @@ demo.py
 pypirc
 .gitignore
 .pypirc
+.DS_Store
+.gitignore

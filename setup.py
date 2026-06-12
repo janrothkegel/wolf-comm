@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='wolf_comm',
-    version='0.0.48',
+    version='0.0.50',
     author="Jan Rothkegel",
     author_email="jan.rothkegel@web.de",
     description="A package to communicate with Wolf SmartSet Cloud",
@@ -17,14 +17,16 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.14",
         "Operating System :: OS Independent",
         "License :: OSI Approved :: Apache Software License",
     ],
+    python_requires=">=3.14",
     install_requires=[
-        'aiohttp',
-        'httpx',
-        'lxml',
-        'pkce',
-        'shortuuid'
+        'aiohttp>=3.12.0',
+        'httpx>=0.26.0',
+        'lxml>=6.0.0',
+        'pkce>=1.0.3',
+        'shortuuid>=1.0.11'
     ]
 )
