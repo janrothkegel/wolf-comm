@@ -23,7 +23,6 @@ setuptools.setup(
     ],
     python_requires=">=3.14",
     install_requires=[
-        'aiohttp>=3.12.0',
         'httpx>=0.26.0',
         'lxml>=6.0.0',
         'pkce>=1.0.3',

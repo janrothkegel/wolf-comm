@@ -44,10 +44,11 @@ deps in `requirements_test.txt`). The `parameters-examples/` JSON files double a
 treat them as the authoritative record of what the cloud API returns.
 
 ### Dependencies
-`httpx` (primary async HTTP), `aiohttp` (used **only** for fetching the localization JS files),
-`lxml` (parsing the login HTML form), `pkce` (PKCE pair), `shortuuid` (OAuth `state`).
-`requirements.txt` uses minimum bounds (`aiohttp>=3.12.0`, `httpx>=0.26.0`, `lxml>=6.0.0`,
-`pkce>=1.0.3`, `shortuuid>=1.0.11`) — the lxml/aiohttp floors are what guarantee Python 3.14
+`httpx` (ALL async HTTP, including the localization JS fetch — do not add `aiohttp` back: creating
+a session/SSL context inside the event loop is a blocking operation Home Assistant flags, and a
+test guards against the import), `lxml` (parsing the login HTML form), `pkce` (PKCE pair),
+`shortuuid` (OAuth `state`). `requirements.txt` uses minimum bounds (`httpx>=0.26.0`,
+`lxml>=6.0.0`, `pkce>=1.0.3`, `shortuuid>=1.0.11`) — the lxml floor is what guarantees Python 3.14
 wheels. `setup.py install_requires` mirrors these.
 
 ---
@@ -104,7 +105,7 @@ against the IdentityServer at `/idsrv`:
    `{access_token, expires_in}`.
 
 - Client id is `smartset.web` (`AUTHENTICATION_CLIENT`); scope `openid profile api role`;
-  `redirect_uri = https://www.wolf-smartset.com/signin-callback.html`; `lang=de-DE`.
+  `redirect_uri = https://www.wolf-smartset.com/signin-callback.html`; `lang=en-GB`.
 - **No refresh token** is used. When the token expires the whole flow is re-run.
 - **`Tokens`** stores `access_token` and a computed `expire_date`; `is_expired()` compares to now.
 - **`TokenAuth.__init__` rejects passwords longer than 30 chars** → `PasswordToLong`. The Wolf
@@ -139,7 +140,10 @@ WolfClient(username, password, expert_p=None, region=None, client=None, client_l
 - `expert_p` → `self.expert_mode` (default `False`). See §5 for what it changes.
 - `region` → `self.region_set` (default `"en"`), used for localization.
 - Provide **either** `client` (a reused `httpx.AsyncClient`) **or** `client_lambda` (a factory
-  returning one) — not both. If neither, a fresh `httpx.AsyncClient()` is created. The `client`
+  returning one) — not both. If neither, a default `httpx.AsyncClient` is created **lazily on
+  first request, in an executor** (constructing it builds the SSL context — blocking I/O that
+  must not run in the event loop; HA's flagged-operations list). Direct synchronous access to
+  the `client` property before any request still creates one as a fallback. The `client`
   property resolves the active client and raises `RuntimeError` if misconfigured.
 
 ### Request plumbing (private)
@@ -199,9 +203,12 @@ a misleading re-auth prompt) and `PasswordToLong`.
 ### Localization
 `fetch_parameters` first calls `load_localized_json(region_set)`:
 - `fetch_localized_text(culture)` GETs
-  `https://www.wolf-smartset.com/js/localized-text/text.culture.{culture}.js` **via aiohttp**,
+  `https://www.wolf-smartset.com/js/localized-text/text.culture.{culture}.js` **via the shared
+  httpx client** (`self.client` — in HA the injected, safely-constructed one),
   falling back to `en` if the culture 404s.
-- `extract_messages_json(text)` regex-extracts the `messages: {…}` object out of that JS file.
+- `extract_messages_json(text)` regex-extracts the `messages: {…}` object out of that JS file;
+  `load_localized_json` runs it **in an executor** (CPU-bound work over a large payload — keep it
+  off the event loop).
 - `try_and_parse(text, 1000)` is a **resilient JSON parser**: on `JSONDecodeError` it deletes the
   offending line and retries (up to 1000 times) — a workaround for malformed entries in Wolf's JS.
 - The result is stored in `self.regional`; `replace_with_localized_text(text)` looks names up
@@ -436,7 +443,7 @@ Highlights: `SESSION_ID='SessionId'`, `BUNDLE_ID='BundleId'`, `BUNDLE='IsSubBund
 - **Reusing an `httpx.AsyncClient`**: pass `client=` (or `client_lambda=`) so cookies/connections
   persist; Home Assistant supplies its own shared client this way.
 - **Sessions expire**; the client auto-refreshes every 60s and re-auths on 401/500 with one retry.
-- The library targets the German portal (`lang=de-DE`); parameter `Name`s come back in German and
+- The login flow requests the portal with `lang=en-GB`; parameter `Name`s come back in German and
   are localized via the `text.culture.<region>.js` files, falling back to English.
 - **Run the tests** (`venv/bin/python -m pytest`) after changes — the suite in `tests/` pins
   current behavior (including the quirks above) and exercises the real fixtures in

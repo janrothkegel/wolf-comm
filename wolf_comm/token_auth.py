@@ -77,7 +77,7 @@ class TokenAuth:
                     'code_challenge': code_challenge,
                     'code_challenge_method': 'S256',
                     'response_mode': 'query',
-                    'lang': 'de-DE',
+                    'lang': 'en-GB',
                 }
             )
 
@@ -108,7 +108,7 @@ class TokenAuth:
                         f'&code_challenge={code_challenge}'
                         '&code_challenge_method=S256'
                         '&response_mode=query'
-                        '&lang=de-DE'
+                        '&lang=en-GB'
                     },
                     headers={
                         "Sec-Fetch-Dest": "document",
@@ -126,7 +126,7 @@ class TokenAuth:
                     "Cache-control": "no-cache",
                     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:108.0) Gecko/20100101 Firefox/108.0",
                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-                    "Accept-Language": "de-DE,de;q=0.8,en-US;q=0.5,en;q=0.3",
+                    "Accept-Language": "en-GB,en;q=0.8,en-US;q=0.5,en;q=0.3",
                     "Referer": constants.BASE_URL + "/",
                     "Sec-Fetch-Dest": "document",
                     "Sec-Fetch-Mode": "navigate",

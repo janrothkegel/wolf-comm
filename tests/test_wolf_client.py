@@ -9,6 +9,7 @@ Sections:
   4. End-to-end mapping over the real parameters-examples/ fixtures
 """
 import json
+from pathlib import Path
 from unittest.mock import AsyncMock
 
 import httpx
@@ -280,6 +281,54 @@ def test_try_and_parse_exhausted_returns_none():
     assert WolfClient.try_and_parse("not json", 0) is None
 
 
+async def test_fetch_localized_text_uses_shared_httpx_client():
+    wc, http = make_authorized_client()
+    http.get = AsyncMock(return_value=httpx.Response(200, text="messages: {}"))
+
+    text = await wc.fetch_localized_text("de")
+
+    assert text == "messages: {}"
+    url = http.get.call_args.args[0]
+    assert url.endswith("/js/localized-text/text.culture.de.js")
+
+
+async def test_fetch_localized_text_falls_back_to_english():
+    wc, http = make_authorized_client()
+    http.get = AsyncMock(side_effect=[
+        httpx.Response(404, text=""),
+        httpx.Response(200, text="messages: {'en': 1}"),
+    ])
+
+    text = await wc.fetch_localized_text("xx")
+
+    assert text == "messages: {'en': 1}"
+    first_url = http.get.call_args_list[0].args[0]
+    second_url = http.get.call_args_list[1].args[0]
+    assert first_url.endswith("text.culture.xx.js")
+    assert second_url.endswith("text.culture.en.js")
+
+
+async def test_fetch_localized_text_returns_empty_when_all_fail():
+    wc, http = make_authorized_client()
+    http.get = AsyncMock(side_effect=[
+        httpx.Response(404, text=""),
+        httpx.Response(404, text=""),
+    ])
+    assert await wc.fetch_localized_text("xx") == ""
+
+
+def test_library_does_not_use_aiohttp():
+    # The localization fetch reuses the shared httpx client; creating an
+    # aiohttp session (and its SSL context) inside the event loop is a
+    # blocking operation flagged by Home Assistant. Keep aiohttp out.
+    import wolf_comm
+    pkg_dir = Path(wolf_comm.__file__).resolve().parent
+    for py in pkg_dir.glob("*.py"):
+        source = py.read_text(encoding="utf-8")
+        assert "import aiohttp" not in source, py.name
+        assert "from aiohttp" not in source, py.name
+
+
 def test_replace_with_localized_text_hit_and_miss():
     client = make_bare_client()
     client.regional = {"Heizung": "Heating"}
@@ -304,6 +353,44 @@ def ok(payload):
 def test_client_requires_single_client_config():
     with pytest.raises(RuntimeError):
         WolfClient("u", "p", client=AsyncMock(), client_lambda=lambda: AsyncMock())
+
+
+async def test_default_client_is_created_lazily_off_loop():
+    # No client/client_lambda: construction must NOT build the httpx client
+    # (its SSL-context setup is blocking I/O that would run in the caller's
+    # event loop); it is created in an executor on first use instead.
+    from wolf_comm.wolf_client import WolfClient as WC
+
+    wc = WC("user", "password")
+    assert wc._client is None
+
+    await wc._WolfClient__ensure_client()
+    assert isinstance(wc._client, httpx.AsyncClient)
+
+    # idempotent: a second call keeps the same instance
+    first = wc._client
+    await wc._WolfClient__ensure_client()
+    assert wc._client is first
+
+
+def test_default_client_sync_property_fallback():
+    # Direct synchronous property access (no running loop to block) still
+    # yields a usable client for backward compatibility.
+    from wolf_comm.wolf_client import WolfClient as WC
+
+    wc = WC("user", "password")
+    assert isinstance(wc.client, httpx.AsyncClient)
+
+
+async def test_load_localized_json_parses_in_executor():
+    wc, _ = make_authorized_client()
+    wc.fetch_localized_text = AsyncMock(
+        return_value='var x = { messages: {"Heizung": "Heating"} }'
+    )
+
+    await wc.load_localized_json("en")
+
+    assert wc.regional == {"Heizung": "Heating"}
 
 
 async def test_fetch_system_list():

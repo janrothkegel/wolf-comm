@@ -1,14 +1,14 @@
+import asyncio
 import datetime
 import json
 import logging
 import re
 from typing import Union, Optional
 
-import aiohttp
 import httpx
 from httpx import Headers
 
-from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
+from wolf_comm.constants import BASE_URL, BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, RPM, FLOW, FREQUENCY, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
     WATTHOURS_KILOWATTHOURS, WATTHOURS_KILOWATTHOURS_MEGAWATTHOURS, \
@@ -37,12 +37,27 @@ class WolfClient:
 
     @property
     def client(self):
-        if hasattr(self, "_client") and self._client is not None:
+        if getattr(self, "_client", None) is not None:
             return self._client
-        elif hasattr(self, "_client_lambda") and self._client_lambda is not None:
+        elif getattr(self, "_client_lambda", None) is not None:
             return self._client_lambda()
+        elif hasattr(self, "_client"):
+            # default mode, accessed synchronously (no running event loop to
+            # block); the async paths create the client off-loop first via
+            # __ensure_client
+            self._client = httpx.AsyncClient()
+            return self._client
         else:
             raise RuntimeError("No valid client configuration")
+
+    async def __ensure_client(self) -> None:
+        # Default-mode lazy creation: httpx.AsyncClient() builds its SSL
+        # context synchronously (blocking disk I/O — load_verify_locations),
+        # which must not run inside the event loop (see
+        # developers.home-assistant.io/docs/asyncio_blocking_operations).
+        if hasattr(self, "_client") and self._client is None:
+            loop = asyncio.get_running_loop()
+            self._client = await loop.run_in_executor(None, httpx.AsyncClient)
 
     def __init__(self, username: str, password: str, expert_p=None, region=None, client=None, client_lambda=None):
         if client is not None and client_lambda is not None:
@@ -52,7 +67,9 @@ class WolfClient:
         elif client_lambda is not None:
             self._client_lambda = client_lambda
         else:
-            self._client = httpx.AsyncClient()
+            # created lazily on first use — building it here would do
+            # blocking SSL-context I/O inside the caller's event loop
+            self._client = None
 
         self.tokens = None
         self.token_auth = TokenAuth(username, password)
@@ -83,6 +100,7 @@ class WolfClient:
             return None
 
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
+        await self.__ensure_client()
         if self.tokens is None or self.tokens.is_expired():
             await self.__authorize_and_session()
 
@@ -253,27 +271,37 @@ class WolfClient:
                 text_lines.pop(line)
         return None
 
-    @staticmethod
-    async def fetch_localized_text(culture: str):
-        async with aiohttp.ClientSession() as session:
-            url = f"https://www.wolf-smartset.com/js/localized-text/text.culture.{culture}.js"
-            async with session.get(url) as response:
-                if response.status == 200 or response.status == 304:
-                    return await response.text()
+    async def fetch_localized_text(self, culture: str) -> str:
+        # Reuses the shared httpx client instead of creating a throwaway
+        # aiohttp session: building a session's default SSL context inside
+        # the event loop is a blocking operation that Home Assistant flags
+        # (see developers.home-assistant.io/docs/asyncio_blocking_operations).
+        await self.__ensure_client()
+        resp = await self.client.get(
+            f"{BASE_URL}/js/localized-text/text.culture.{culture}.js"
+        )
+        if resp.status_code in (200, 304):
+            return resp.text
 
-            if culture != 'en':
-                _LOGGER.debug("Culture %s not found, falling back to English", culture)
-                url = "https://www.wolf-smartset.com/js/localized-text/text.culture.en.js"
-                async with session.get(url) as response:
-                    if response.status == 200 or response.status == 304:
-                        return await response.text()
+        if culture != 'en':
+            _LOGGER.debug("Culture %s not found, falling back to English", culture)
+            resp = await self.client.get(
+                f"{BASE_URL}/js/localized-text/text.culture.en.js"
+            )
+            if resp.status_code in (200, 304):
+                return resp.text
 
-            return ""
+        return ""
 
     async def load_localized_json(self, region_input: str):
         res = await self.fetch_localized_text(region_input)
 
-        parsed_json = WolfClient.extract_messages_json(res)
+        # regex + repair-parse over the whole localization JS is CPU-bound;
+        # run it in the executor so the event loop is not stalled
+        loop = asyncio.get_running_loop()
+        parsed_json = await loop.run_in_executor(
+            None, WolfClient.extract_messages_json, res
+        )
 
         if parsed_json is not None:
             self.regional = parsed_json
