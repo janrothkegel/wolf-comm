@@ -10,6 +10,9 @@ AUTHENTICATION_URL = "/idsrv"
 AUTHENTICATION_BASE_URL = BASE_URL + AUTHENTICATION_URL
 AUTHENTICATION_CLIENT = "smartset.web"
 
+# ASP.NET Core anti-forgery form field on the IdentityServer login page
+REQUEST_VERIFICATION_TOKEN = '__RequestVerificationToken'
+
 SESSION_ID = 'SessionId'
 
 GUI_ID_CHANGED = 'GuiIdChanged'
@@ -55,6 +58,12 @@ HOUR = 'Std'
 KILOWATT = 'kW'
 
 KILOWATTHOURS = 'kWh'
+
+# Energy parameters whose raw value is in Wh; the unit string lists the
+# display scalings the portal cycles through (Wh -> kWh -> MWh).
+WATTHOURS_KILOWATTHOURS = 'Wh;kWh'
+
+WATTHOURS_KILOWATTHOURS_MEGAWATTHOURS = 'Wh;kWh;MWh'
 
 BAR = 'bar'
 

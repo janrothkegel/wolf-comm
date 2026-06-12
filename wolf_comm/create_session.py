@@ -7,7 +7,10 @@ from wolf_comm.constants import SESSION_ID, TIMESTAMP
 from wolf_comm.helpers import bearer_header
 
 
-async def create_session(client: AsyncClient, token: str):
+# BrowserSessionId is a JSON number on the wire (verified against the
+# openHAB wolfsmartset binding's CreateSession2DTO, which declares Integer),
+# matching WolfClient.session_id: Optional[int].
+async def create_session(client: AsyncClient, token: str) -> int:
     data = {
         TIMESTAMP: datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
@@ -24,7 +27,7 @@ async def create_session(client: AsyncClient, token: str):
     return resp.json()['BrowserSessionId']
 
 
-async def update_session(client: AsyncClient, token: str, session_id: str):
+async def update_session(client: AsyncClient, token: str, session_id: int):
     data = {
         SESSION_ID: session_id
     }

@@ -11,15 +11,18 @@ from httpx import Headers
 from wolf_comm.constants import BASE_URL_PORTAL, ID, GATEWAY_ID, NAME, SYSTEM_ID, MENU_ITEMS, TAB_VIEWS, BUNDLE_ID, \
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, RPM, FLOW, FREQUENCY, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
+    WATTHOURS_KILOWATTHOURS, WATTHOURS_KILOWATTHOURS_MEGAWATTHOURS, \
     LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES, ISREADONLY
 from wolf_comm.create_session import create_session, update_session
 from wolf_comm.helpers import bearer_header
 from wolf_comm.models import Temperature, Parameter, SimpleParameter, Device, Pressure, ListItemParameter, \
-    PercentageParameter, Value, ListItem, HoursParameter, PowerParameter, EnergyParameter, RPMParameter, FlowParameter, FrequencyParameter
+    PercentageParameter, Value, ListItem, HoursParameter, PowerParameter, EnergyParameter, EnergyWhParameter, \
+    RPMParameter, FlowParameter, FrequencyParameter
 from wolf_comm.token_auth import Tokens, TokenAuth
 
 _LOGGER = logging.getLogger(__name__)
 SPLIT = "---"
+RETRY_STATUS_CODES = {401, 500}
 
 
 class WolfClient:
@@ -61,12 +64,27 @@ class WolfClient:
         self.expert_mode = expert_p if expert_p is not None else False
         self.region_set = region if region is not None else "en"
 
+    def __prepare_attempt(self, kwargs) -> dict:
+        # Build headers from the ORIGINAL caller headers plus the CURRENT
+        # bearer token, and inject the current SessionId into a dict JSON
+        # body. Called before every attempt so a retry after re-auth carries
+        # the fresh token and session instead of the stale ones.
+        headers = {**bearer_header(self.tokens.access_token), **kwargs.get("headers", {})}
+        if "json" in kwargs and self.session_id is not None:
+            if isinstance(kwargs["json"], dict):
+                kwargs["json"][SESSION_ID] = self.session_id
+        return headers
+
+    @staticmethod
+    def __response_body(resp) -> Optional[dict]:
+        try:
+            return resp.json()
+        except ValueError:
+            return None
+
     async def __request(self, method: str, path: str, **kwargs) -> Union[dict, list]:
         if self.tokens is None or self.tokens.is_expired():
             await self.__authorize_and_session()
-
-        headers = kwargs.get("headers", {})
-        headers = {**bearer_header(self.tokens.access_token), **headers}
 
         if (
             self.last_session_refesh is None
@@ -78,24 +96,19 @@ class WolfClient:
             )
             _LOGGER.debug("Session ID: %s extended", self.session_id)
 
-        if "json" in kwargs and self.session_id is not None:
-            if isinstance(kwargs["json"], dict):
-                kwargs["json"][SESSION_ID] = self.session_id
-
-        resp = await self.__execute(headers, kwargs, method, path)
-        if resp.status_code in {401, 500}:
+        resp = await self.__execute(self.__prepare_attempt(kwargs), kwargs, method, path)
+        if resp.status_code in RETRY_STATUS_CODES:
             _LOGGER.info("Retrying failed request (status code %d)", resp.status_code)
             await self.__authorize_and_session()
-            headers = {**bearer_header(self.tokens.access_token), **dict(headers)}
-            try:
-                execution = await self.__execute(headers, kwargs, method, path)
-                return execution.json()
-            except FetchFailed as e:
+            resp = await self.__execute(self.__prepare_attempt(kwargs), kwargs, method, path)
+            if resp.status_code in RETRY_STATUS_CODES:
                 self.last_failed = True
-                raise e
-        else:
-            self.last_failed = False
-            return resp.json()
+                raise FetchFailed(
+                    f"retry returned status code {resp.status_code}",
+                    self.__response_body(resp),
+                )
+        self.last_failed = False
+        return resp.json()
 
     async def __execute(self, headers, kwargs, method, path):
         return await self.client.request(
@@ -226,20 +239,19 @@ class WolfClient:
 
     @staticmethod
     def try_and_parse(text, times):
-        if times == 0:
-            return text
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError as e:
-            line = e.lineno - 1
-
-            text_lines = text.split("\n")
-
-            if line < len(text_lines):
+        # the line list is the loop state; split once instead of re-splitting
+        # the whole payload on every failed attempt
+        text_lines = text.split("\n")
+        for _ in range(times):
+            try:
+                return json.loads("\n".join(text_lines))
+            except json.JSONDecodeError as e:
+                line = e.lineno - 1
+                if line >= len(text_lines):
+                    # cannot drop another line; retrying would never converge
+                    return None
                 text_lines.pop(line)
-
-            new_text = "\n".join(text_lines)
-            return WolfClient.try_and_parse(new_text, times - 1)
+        return None
 
     @staticmethod
     async def fetch_localized_text(culture: str):
@@ -302,21 +314,31 @@ class WolfClient:
                     raise ParameterReadError(error_msg)
                 raise FetchFailed(error_msg)
 
-            values_combined.extend(
-                Value(v[VALUE_ID], v[VALUE], v[STATE])
-                for v in res[VALUES]
-                if VALUE in v
-            )
+            params_by_value_id = {param.value_id: param for param in params}
+            for v in res[VALUES]:
+                if VALUE not in v:
+                    continue
+                param = params_by_value_id.get(v[VALUE_ID])
+                value = param.convert_raw_value(v[VALUE]) if param is not None else v[VALUE]
+                values_combined.append(Value(v[VALUE_ID], value, v[STATE]))
             last_access_map[bundle_id] = res[LAST_ACCESS]
 
         _LOGGER.debug('requested values for %s parameters, got values for %s ', len(parameters), len(values_combined))
         return values_combined
 
     # api/portal/WriteParameterValues
-    async def write_value(self, gateway_id, system_id, bundle_id, Value):
+    async def write_value(self, gateway_id, system_id, bundle_id, value: dict):
+        """Write a single parameter value.
+
+        ``value`` is a dict with two keys: ``ValueId`` (the parameter's value
+        id) and ``State`` (the new value to write) — note this is NOT a
+        models.Value instance. Returns the raw API response dict; raises
+        ParameterWriteError / WriteFailed on an error response, or FetchFailed
+        when the request itself fails (repeated 401/500).
+        """
         data = {
             WRITE_PARAMETER_VALUES: [
-                {"ValueId": Value[VALUE_ID], "Value": Value[STATE]}
+                {"ValueId": value[VALUE_ID], "Value": value[STATE]}
             ],
             SYSTEM_ID: system_id,
             GATEWAY_ID: gateway_id,
@@ -346,7 +368,7 @@ class WolfClient:
         name = parameter[NAME]
         parameter_id = parameter[PARAMETER_ID]
 
-        bundle_id = parameter.get(BUNDLE_ID, "1000")
+        bundle_id = parameter.get(BUNDLE_ID, 1000)
         readonly = parameter.get(ISREADONLY, True)
 
         if UNIT in parameter:
@@ -363,6 +385,8 @@ class WolfClient:
                 return PowerParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == KILOWATTHOURS:
                 return EnergyParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
+            elif unit in (WATTHOURS_KILOWATTHOURS, WATTHOURS_KILOWATTHOURS_MEGAWATTHOURS):
+                return EnergyWhParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == RPM:
                 return RPMParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
             elif unit == FLOW:
@@ -401,28 +425,32 @@ class WolfClient:
     @staticmethod
     def _extract_parameter_descriptors(desc):
         # recursively traverses datastructure returned by GetGuiDescriptionForGateway API and extracts all ParameterDescriptors arrays
-        def traverse(item, path=''):
+        def traverse(item, path='', inherited_bundle=None):
             # Object is a dict, crawl keys
             if type(item) is dict:
-                bundleId = None
-                if "BundleId" in item:
-                    bundleId = item["BundleId"]
+                # nearest enclosing BundleId: this dict's own, else the
+                # closest ancestor's, threaded down through the recursion
+                bundleId = item.get("BundleId", inherited_bundle)
 
                 for key in item:
                     if key == "ParameterDescriptors":
                         _LOGGER.debug("Found ParameterDescriptors at path: %s", path)
-                        # Store BundleId from parent in each item for getting values
-                        for descriptor in item[key]:
-                            descriptor["BundleId"] = bundleId
+                        # Store BundleId from parent in each item for getting values.
+                        # Only stamp when one is known — stamping None would bypass
+                        # _map_parameter's 1000 default and end up as
+                        # "BundleId": null in GetParameterValues requests.
+                        if bundleId is not None:
+                            for descriptor in item[key]:
+                                descriptor["BundleId"] = bundleId
                         yield from item[key]
-                    yield from traverse(item[key], path + key + '>')
+                    yield from traverse(item[key], path + key + '>', bundleId)
 
             # Object is a list, crawl list items
             elif type(item) is list:
                 i = 0
                 for a in item:
                     _LOGGER.debug("Found listitem at path: %s", path)
-                    yield from traverse(a, path + str(i) + '>')
+                    yield from traverse(a, path + str(i) + '>', inherited_bundle)
                     i += 1
 
         return list(traverse(desc))

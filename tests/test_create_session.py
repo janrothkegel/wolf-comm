@@ -14,7 +14,12 @@ async def test_create_session_returns_browser_session_id():
 
     session_id = await create_session(http, "test-token")
 
+    # BrowserSessionId arrives as a JSON number (verified 2026-06-12 against
+    # the openHAB binding's CreateSession2DTO: Integer) — the mock and the
+    # int annotations on create_session/update_session/WolfClient.session_id
+    # pin that contract.
     assert session_id == 17
+    assert isinstance(session_id, int)
     url = http.post.call_args.args[0]
     assert url.endswith("/api/portal/CreateSession2")
     kwargs = http.post.call_args.kwargs

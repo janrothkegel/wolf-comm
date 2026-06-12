@@ -7,7 +7,7 @@ systems, reads the parameter/GUI description for a gateway, fetches current valu
 parameter changes back.
 
 - **Package name / import:** `wolf_comm`
-- **Version:** `0.0.50` (see [setup.py](setup.py))
+- **Version:** `0.0.51` (see [setup.py](setup.py))
 - **Upstream:** https://github.com/janrothkegel/wolf-comm
 - **License:** Apache 2.0
 - **Python:** async-first; **requires 3.14+** (`python_requires=">=3.14"`; older versions unsupported)
@@ -19,10 +19,10 @@ parameter changes back.
 ```
 wolf-comm/
 ├── wolf_comm/                  # the package
-│   ├── __init__.py             # re-exports models.* and wolf_client.*
+│   ├── __init__.py             # re-exports models.*, wolf_client.*, and the token_auth exceptions
 │   ├── constants.py            # ALL API field-name strings + unit strings (no magic strings elsewhere)
 │   ├── helpers.py              # bearer_header(token)
-│   ├── token_auth.py           # OAuth2/OpenID PKCE login → Tokens; InvalidAuth / PasswordToLong
+│   ├── token_auth.py           # OAuth2/OpenID PKCE login → Tokens; InvalidAuth / PortalUnavailable / PasswordToLong
 │   ├── create_session.py       # create_session() / update_session() portal session lifecycle
 │   ├── models.py               # Device, Parameter hierarchy, ListItem, Value
 │   ├── wolf_client.py          # WolfClient — the main entry point + exception hierarchy
@@ -94,7 +94,9 @@ against the IdentityServer at `/idsrv`:
 
 1. `pkce.generate_pkce_pair()` → `code_verifier`, `code_challenge`; `shortuuid.uuid()` → `state`.
 2. `GET /idsrv/Account/Login` with the OAuth params; parse the returned HTML with `lxml` and pull
-   the first `//form/input/@value` as the `__RequestVerificationToken`.
+   the `__RequestVerificationToken` via the name-targeted XPath
+   `//input[@name="__RequestVerificationToken"]/@value` (`_extract_verification_token`; the live
+   page has two forms each carrying the same per-response token, so the first match is taken).
 3. `POST /idsrv/Account/Login` with `Input.Username`, `Input.Password`, the verification token,
    `follow_redirects=True`; the authorization `code` is read out of the final redirect URL
    (`r.url.params['code']`).
@@ -107,11 +109,23 @@ against the IdentityServer at `/idsrv`:
 - **`Tokens`** stores `access_token` and a computed `expire_date`; `is_expired()` compares to now.
 - **`TokenAuth.__init__` rejects passwords longer than 30 chars** → `PasswordToLong`. The Wolf
   servers silently reject longer passwords, hence the client-side guard.
-- Any failure inside `token()` is caught broadly and re-raised as **`InvalidAuth`**.
+- Any failure inside `token()` is caught broadly and re-raised as **`InvalidAuth`** (chained via
+  `raise … from e`, so the root cause stays inspectable through `__cause__`; an `InvalidAuth`
+  raised inside the flow propagates unwrapped).
+- **A login page without a usable verification token raises `PortalUnavailable`** — covering a
+  missing field, an empty `value=""`, and an empty/unparseable body (`_extract_verification_token`
+  returns `None` for all three; importable from the package root: `from wolf_comm import
+  PortalUnavailable`). It is a subclass of `InvalidAuth` and means the portal is
+  rate-limiting/in maintenance — credentials were never submitted.
+  Consumers should catch it *before* `InvalidAuth` and retry/back off instead of
+  prompting for re-authentication; handlers that only catch `InvalidAuth` keep working.
+  A genuine credential failure takes a different path (token endpoint returns `"error"` in
+  its JSON) and raises plain `InvalidAuth`.
 
 **Session lifecycle:**
 - `create_session(client, token)` → `POST /api/portal/CreateSession2` with a `Timestamp`
-  (`"%Y-%m-%d %H:%M:%S"`); returns `BrowserSessionId`.
+  (`"%Y-%m-%d %H:%M:%S"`); returns `BrowserSessionId` — an **int** on the wire (verified against
+  the openHAB wolfsmartset binding's `CreateSession2DTO`).
 - `update_session(client, token, session_id)` → `POST /api/portal/UpdateSession` to keep it alive.
 
 ---
@@ -147,21 +161,26 @@ WolfClient(username, password, expert_p=None, region=None, client=None, client_l
 | `fetch_system_state_list(system_id, gateway_id)` | `POST api/portal/GetSystemStateList` | `bool` (`[0].GatewayState.IsOnline`) |
 | `fetch_parameters(gateway_id, system_id)` | `GET api/portal/GetGuiDescriptionForGateway` | `list[Parameter]` |
 | `fetch_value(gateway_id, system_id, parameters)` | `POST api/portal/GetParameterValues` (batched per bundle) | `list[Value]` |
-| `write_value(gateway_id, system_id, bundle_id, Value)` | `POST api/portal/WriteParameterValues` | `dict` |
+| `write_value(gateway_id, system_id, bundle_id, value)` | `POST api/portal/WriteParameterValues` | `dict` |
 | `close_system()` | `POST api/portal/CloseSystem` | `None` |
 
 **`fetch_value` batching:** parameters are grouped by `bundle_id` into `bundles`; one request is
 made per bundle with `ValueIdList`, `GatewayId`, `SystemId`, `GuiIdChanged=False`, and a
 per-bundle `LastAccess` cursor (`last_access_map`) that is updated from each response. Only
-response entries that actually contain a `Value` key become `Value` objects.
+response entries that actually contain a `Value` key become `Value` objects. Entries belonging
+to an `EnergyWhParameter` (`Wh;kWh` / `Wh;kWh;MWh` units) arrive as raw **Wh** and are converted
+to kWh before the `Value` is built — via the `Parameter.convert_raw_value(raw)` hook (identity by
+default; `EnergyWhParameter` overrides it with `round(wh / 1000, 3)`, passing non-numeric
+placeholder readings through untouched).
 
 **Error handling:** both `fetch_value` and `write_value` inspect the response for `ErrorCode` /
 `ErrorType`. If `Message == 'internal msg: ReadParameterValues error'` they raise the parameter-
 specific error (`ParameterReadError` / `ParameterWriteError`); otherwise `FetchFailed` /
 `WriteFailed`.
 
-**`write_value`'s `Value` argument is a dict**, not a `Value` object — it reads `Value[ValueId]`
-and `Value[State]` and posts `{"WriteParameterValues": [{"ValueId":…, "Value": <state>}], …}`.
+**`write_value`'s `value` argument is a dict**, not a `models.Value` object — it reads
+`value[ValueId]` and `value[State]` and posts
+`{"WriteParameterValues": [{"ValueId":…, "Value": <state>}], …}`.
 
 ### Exception hierarchy (defined at the bottom of `wolf_client.py`)
 ```
@@ -173,7 +192,9 @@ Exception
         ├── ParameterReadError                 # "Failed to read parameters: …"
         └── ParameterWriteError                # "Failed to write parameters: …"
 ```
-Plus `InvalidAuth` and `PasswordToLong` from `token_auth.py`.
+Plus from `token_auth.py`: `InvalidAuth` (with subclass `PortalUnavailable` — login page served
+without the verification token, i.e. rate limit/maintenance; catch before `InvalidAuth` to avoid
+a misleading re-auth prompt) and `PasswordToLong`.
 
 ### Localization
 `fetch_parameters` first calls `load_localized_json(region_set)`:
@@ -208,6 +229,7 @@ Concrete types and their `unit`:
 | `HoursParameter` | **`H`** | `Std` | `HOUR` (note: API sends `Std`, model reports `H`) |
 | `PowerParameter` | `kW` | `kW` | `KILOWATT` |
 | `EnergyParameter` | `kWh` | `kWh` | `KILOWATTHOURS` |
+| `EnergyWhParameter` | `kWh` (raw value is **Wh**; `fetch_value` converts to kWh) | `Wh;kWh` or `Wh;kWh;MWh` | `WATTHOURS_KILOWATTHOURS` / `WATTHOURS_KILOWATTHOURS_MEGAWATTHOURS` |
 | `RPMParameter` | `U/min` | `U/min` | `RPM` |
 | `FlowParameter` | `l/min` | `l/min` | `FLOW` |
 | `FrequencyParameter` | `Hz` | `Hz` | `FREQUENCY` |
@@ -215,25 +237,31 @@ Concrete types and their `unit`:
 | `ListItemParameter` | *(none, has `items`)* | has `ListItems` | — |
 
 `UnitParameter` is an abstract intermediate base (adds the abstract `unit`); the unit classes
-subclass it. `ListItemParameter` and `SimpleParameter` extend `Parameter` directly.
+subclass it. `EnergyWhParameter` subclasses `EnergyParameter` (so isinstance checks for
+`EnergyParameter` pick it up) — the API delivers its raw values in Wh and `fetch_value` divides
+by 1000 before building the `Value`. `ListItemParameter` and `SimpleParameter` extend
+`Parameter` directly.
 
 - **`ListItem(value, name)`** — note **arg order is `(value, name)`** and `value` is cast to `int`.
   Built from `ListItems[].Value` / `ListItems[].DisplayText`. `ListItemParameter.items` is the list.
 - **`Value(value_id, value, state)`** — the current reading: `value` is a string, `state` an int.
 
 ### `_map_parameter(parameter, parent)` — the dispatcher
-Reads `ValueId`, `Name`, `ParameterId`, defaults `BundleId→"1000"` and `IsReadOnly→True`, then:
+Reads `ValueId`, `Name`, `ParameterId`, defaults `BundleId→1000` (int, matching the API type) and
+`IsReadOnly→True`, then:
 1. **If `Unit` key present** → match against the table above.
 2. **elif `ListItems` present** → `ListItemParameter`.
 3. **else** → `SimpleParameter`.
 
-> ⚠️ **Important gotcha:** the `Unit` branch only handles the nine units above. If a descriptor
+> ⚠️ **Deliberate design:** the `Unit` branch only handles the units above. If a descriptor
 > has a `Unit` the library doesn't recognize (the examples contain `Uhr`, `min`, `K`, `K/K`,
-> `K/(K*h)`, `s`/`sec`, `m³/h`, `ppm`, `Pa`, `V`, `Cent/kWh`, `pls/kWh`, `Wh;kWh`, `Wh;kWh;MWh`,
+> `K/(K*h)`, `s`/`sec`, `m³/h`, `ppm`, `Pa`, `V`, `Cent/kWh`, `pls/kWh`,
 > …), **none of the branches return and `_map_parameter` returns `None`** — and it does **not**
 > fall through to the `ListItems`/`Simple` branches. These `None`s are filtered out downstream
 > (`fetch_parameters` and `fix_duplicated_parameters` skip `None`). Net effect: parameters with
-> unrecognized units are silently dropped. Keep this in mind when a value seems "missing."
+> unrecognized units are dropped. **This is intentional** — unknown units must not surface as
+> untyped sensors; supporting a unit is an explicit opt-in (see §8 "Adding a new unit type").
+> Keep this in mind when a value seems "missing."
 
 ### `_map_view(view)` — and the SVG schema unit trick
 For a TabView, maps each `ParameterDescriptors` entry. **Special case:** if the view has
@@ -362,7 +390,7 @@ Two top-level menus in every example: **`Benutzer`** (user) and **`Fachmann`** (
 | File | Total `ValueId`s* | Notable units present | Notes |
 |---|---|---|---|
 | `gasparameters.json` | 442 descriptors | `°C`(133), `bar`(18), `%`(14), `Std`(6), `Uhr`(43), `min`, `K`, `K/K`, `K/(K*h)`, `s`, `l/min` | gas boiler; 94 list params |
-| `gashybridparameters.json` | 520 descriptors | adds `kW`, `l/min`, energy units `Wh;kWh`, `Wh;kWh;MWh`(36); plus `EnergyCockpitParameterType` | gas hybrid; 101 list params |
+| `gashybridparameters.json` | 520 descriptors | adds `kW`, `l/min`, Wh-based energy units `Wh;kWh`(2), `Wh;kWh;MWh`(36) → `EnergyWhParameter`; plus `EnergyCockpitParameterType` | gas hybrid; 101 list params |
 | `heatpumpparameter.json` | ~529 ValueIds | `°C`(112), `kWh`(28), `kW`, `Hz`(7), `U/min`, `l/min`, `bar`, `pls/kWh`, `Cent/kWh`, `min`, `sec` | heat pump; tabs incl. Mischermodul MM1 |
 | `luftung.json` | ~139 ValueIds | `m³/h`(9), `°C`(15), `ppm`(2), `Pa`(2), `V`(4), `Uhr`, `K` | ventilation; many units the mapper drops (see gotcha) |
 
@@ -398,6 +426,9 @@ Highlights: `SESSION_ID='SessionId'`, `BUNDLE_ID='BundleId'`, `BUNDLE='IsSubBund
 - **Adding a new unit type** requires three coordinated edits: a constant in `constants.py`, a new
   `UnitParameter` subclass in `models.py`, and a new `elif` branch in `_map_parameter`
   (`wolf_client.py`). Missing the `_map_parameter` branch = the parameter silently becomes `None`.
+  If the raw API value uses a different scale than the reported unit, override
+  `convert_raw_value(raw)` on the new model class (see `EnergyWhParameter`) — `fetch_value` calls
+  it on every reading; never put conversions in `fetch_value` itself.
 - **`HoursParameter.unit` returns `"H"`** even though the API/constant uses `"Std"`. Don't "fix"
   one without checking the integration's expectations.
 - **Attribute typo `last_session_refesh`** is load-bearing (referenced in `__request`); don't
@@ -415,7 +446,7 @@ Highlights: `SESSION_ID='SessionId'`, `BUNDLE_ID='BundleId'`, `BUNDLE='IsSubBund
 
 ## 9. Build / release
 
-- Packaging: [setup.py](setup.py) (`version='0.0.48'`, ships `py.typed`).
+- Packaging: [setup.py](setup.py) (`version='0.0.51'`, ships `py.typed`).
 - CI publish workflow: `.github/workflows/python-publish.yml`.
 - Releases are cut by bumping the version in `setup.py` (recent commits follow
   `Bump version from X to Y`).

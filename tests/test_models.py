@@ -4,6 +4,7 @@ import pytest
 from wolf_comm.models import (
     Device,
     EnergyParameter,
+    EnergyWhParameter,
     FlowParameter,
     FrequencyParameter,
     HoursParameter,
@@ -41,6 +42,8 @@ def test_device_attributes_and_str():
         (HoursParameter, "H"),
         (PowerParameter, "kW"),
         (EnergyParameter, "kWh"),
+        # raw API value is Wh, but it is reported as a standard kWh energy param
+        (EnergyWhParameter, "kWh"),
         (RPMParameter, "U/min"),
         (FlowParameter, "l/min"),
         (FrequencyParameter, "Hz"),
@@ -63,6 +66,7 @@ def test_unit_parameter_units(cls, expected_unit):
         HoursParameter,
         PowerParameter,
         EnergyParameter,
+        EnergyWhParameter,
         RPMParameter,
         FlowParameter,
         FrequencyParameter,
@@ -76,6 +80,30 @@ def test_parameter_common_properties(cls):
     assert param.parameter_id == 10
     assert param.bundle_id == 1000
     assert param.read_only is True
+
+
+def test_energy_wh_parameter_is_energy_parameter():
+    # Consumers that isinstance-check for EnergyParameter must pick it up.
+    assert isinstance(EnergyWhParameter(**ARGS), EnergyParameter)
+
+
+def test_convert_raw_value_identity_by_default():
+    assert SimpleParameter(**ARGS).convert_raw_value("42.5") == "42.5"
+    assert Temperature(**ARGS).convert_raw_value("21.5") == "21.5"
+
+
+def test_energy_wh_convert_raw_value_wh_to_kwh():
+    param = EnergyWhParameter(**ARGS)
+    assert param.convert_raw_value("1204866") == "1204.866"
+    assert param.convert_raw_value("1308") == "1.308"
+
+
+def test_energy_wh_convert_raw_value_passes_non_numeric_through():
+    # Placeholder readings (sensor offline) must not raise out of the hook.
+    param = EnergyWhParameter(**ARGS)
+    assert param.convert_raw_value("--") == "--"
+    assert param.convert_raw_value("") == ""
+    assert param.convert_raw_value(None) is None
 
 
 def test_parameter_setters():

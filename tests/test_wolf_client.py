@@ -17,6 +17,7 @@ import pytest
 from conftest import EXAMPLES_DIR, make_authorized_client
 from wolf_comm.models import (
     EnergyParameter,
+    EnergyWhParameter,
     FlowParameter,
     FrequencyParameter,
     HoursParameter,
@@ -63,6 +64,8 @@ def descriptor(**overrides):
         ("Std", HoursParameter),
         ("kW", PowerParameter),
         ("kWh", EnergyParameter),
+        ("Wh;kWh", EnergyWhParameter),
+        ("Wh;kWh;MWh", EnergyWhParameter),
         ("U/min", RPMParameter),
         ("l/min", FlowParameter),
         ("Hz", FrequencyParameter),
@@ -98,26 +101,29 @@ def test_map_parameter_simple_fallback():
 def test_map_parameter_defaults_for_missing_fields():
     desc = {"ValueId": 1, "ParameterId": 10, "Name": "Param"}
     param = WolfClient._map_parameter(desc, "Tab")
-    # Current behavior: missing IsReadOnly defaults to True and
-    # missing BundleId defaults to the *string* "1000".
+    # Missing IsReadOnly defaults to True; missing BundleId defaults to the
+    # *int* 1000 (matching the API type, so value batching keys stay uniform
+    # and Parameter.__str__'s %d formatting works).
     assert param.read_only is True
-    assert param.bundle_id == "1000"
+    assert param.bundle_id == 1000
+    assert "[1000]" in str(param)
 
 
-@pytest.mark.parametrize("unit", ["Uhr", "min", "K", "m³/h", "ppm", "Pa", "V", "Wh;kWh;MWh"])
+@pytest.mark.parametrize("unit", ["Uhr", "min", "K", "m³/h", "ppm", "Pa", "V"])
 def test_map_parameter_unknown_unit_returns_none(unit):
-    """Known limitation: unrecognized units fall through and map to None.
+    """Intended behavior: unrecognized units fall through and map to None.
 
     These units all occur in the real parameters-examples fixtures. Callers
     (fetch_parameters / fix_duplicated_parameters) skip the None entries, so
-    such parameters are silently dropped. If a fallback is ever added, update
-    this test accordingly.
+    such parameters are dropped. This is deliberate — unknown units must not
+    surface as untyped sensors; supporting one requires an explicit constant,
+    model class, and _map_parameter branch.
     """
     assert WolfClient._map_parameter(descriptor(Unit=unit), "Tab") is None
 
 
 def test_map_parameter_unknown_unit_with_list_items_returns_none():
-    """Known limitation: a Unit key (even unrecognized) shadows ListItems."""
+    """Intended behavior: a Unit key (even unrecognized) shadows ListItems."""
     desc = descriptor(Unit="Uhr", ListItems=[{"Value": "0", "DisplayText": "Auto"}])
     assert WolfClient._map_parameter(desc, "Tab") is None
 
@@ -198,6 +204,37 @@ def test_extract_parameter_descriptors_recurses_and_stamps_bundle_id():
     assert extracted[1]["BundleId"] == 2000
 
 
+def test_extract_descriptors_without_any_bundle_id_keeps_default():
+    # A ParameterDescriptors array with no BundleId anywhere up the tree must
+    # NOT be stamped with None — None would bypass _map_parameter's 1000
+    # default and end up as "BundleId": null in GetParameterValues requests.
+    tree = {"SomeNode": {"ParameterDescriptors": [
+        {"ValueId": 1, "ParameterId": 10, "Name": "P"}
+    ]}}
+    descriptors = WolfClient._extract_parameter_descriptors(tree)
+    assert len(descriptors) == 1
+    assert "BundleId" not in descriptors[0]
+    param = WolfClient._map_parameter(descriptors[0], "Tab")
+    assert param.bundle_id == 1000
+
+
+def test_extract_descriptors_inherits_bundle_id_from_ancestor():
+    # "Nearest enclosing BundleId": when the immediate parent of a
+    # ParameterDescriptors array has no BundleId, the closest ancestor's is
+    # threaded down the recursion instead of silently falling back to 1000.
+    tree = {
+        "TabViews": [{
+            "BundleId": 4200,
+            "SomeWrapper": {"ParameterDescriptors": [
+                {"ValueId": 1, "ParameterId": 10, "Name": "P"}
+            ]},
+        }]
+    }
+    descriptors = WolfClient._extract_parameter_descriptors(tree)
+    assert len(descriptors) == 1
+    assert descriptors[0]["BundleId"] == 4200
+
+
 def test_fix_duplicated_parameters_dedups_and_skips_none():
     client = WolfClient.__new__(WolfClient)  # no auth needed for this helper
     p1 = SimpleParameter(1, "A", "Tab", 10, 1000, True)
@@ -237,10 +274,10 @@ def test_try_and_parse_removes_bad_lines():
     assert WolfClient.try_and_parse(text, 10) == {"a": "b", "c": "d"}
 
 
-def test_try_and_parse_exhausted_returns_input_unchanged():
-    # Current behavior: when retries run out the raw *string* is returned
-    # (not None), which callers must guard against.
-    assert WolfClient.try_and_parse("not json", 0) == "not json"
+def test_try_and_parse_exhausted_returns_none():
+    # Returns None on exhaustion so callers can safely guard with `is not None`
+    # rather than receiving a raw string that would corrupt self.regional.
+    assert WolfClient.try_and_parse("not json", 0) is None
 
 
 def test_replace_with_localized_text_hit_and_miss():
@@ -322,6 +359,40 @@ async def test_fetch_value_batches_by_bundle_id():
     assert [(v.value_id, v.value) for v in values] == [(11, "21.5"), (12, "1.8"), (21, "45.0")]
 
 
+async def test_fetch_value_converts_wh_to_kwh_for_energy_wh_parameters():
+    # 'Wh;kWh' / 'Wh;kWh;MWh' parameters deliver raw Wh; fetch_value must
+    # report them in kWh. Plain EnergyParameter values pass through untouched.
+    params = [
+        EnergyWhParameter(11, "Gesamtertrag", "Tab", 110, 1000, True),
+        EnergyParameter(12, "E1", "Tab", 120, 1000, True),
+    ]
+    wc, _ = make_authorized_client(
+        ok({"Values": [
+            {"ValueId": 11, "Value": "1204866", "State": 1},
+            {"ValueId": 12, "Value": "45.0", "State": 1},
+        ], "LastAccess": "x"})
+    )
+    values = await wc.fetch_value(7, 5, params)
+    assert [(v.value_id, v.value) for v in values] == [(11, "1204.866"), (12, "45.0")]
+
+
+async def test_fetch_value_passes_non_numeric_wh_value_through():
+    # A placeholder reading (sensor offline) must not abort the whole fetch;
+    # the raw string is passed through unconverted.
+    params = [
+        EnergyWhParameter(11, "Gesamtertrag", "Tab", 110, 1000, True),
+        Temperature(12, "T1", "Tab", 120, 1000, True),
+    ]
+    wc, _ = make_authorized_client(
+        ok({"Values": [
+            {"ValueId": 11, "Value": "--", "State": 0},
+            {"ValueId": 12, "Value": "21.5", "State": 1},
+        ], "LastAccess": "x"})
+    )
+    values = await wc.fetch_value(7, 5, params)
+    assert [(v.value_id, v.value) for v in values] == [(11, "--"), (12, "21.5")]
+
+
 async def test_fetch_value_skips_entries_without_value():
     params = [Temperature(11, "T1", "Tab", 110, 1000, True)]
     wc, _ = make_authorized_client(
@@ -389,6 +460,49 @@ async def test_request_retries_once_on_500():
     assert http.request.call_count == 2
     wc._WolfClient__authorize_and_session.assert_awaited_once()
     assert devices[0].name == "Home"
+    assert wc.last_failed is False
+
+
+async def test_request_raises_fetch_failed_when_retry_also_fails():
+    wc, http = make_authorized_client(
+        httpx.Response(500, json={"error": "server"}),
+        httpx.Response(500, json={"error": "still broken"}),
+    )
+    wc._WolfClient__authorize_and_session = AsyncMock()
+
+    with pytest.raises(FetchFailed) as exc_info:
+        await wc.fetch_system_list()
+
+    # exactly one retry, then give up — the error body must not be returned
+    # to the caller as if it were data, but it IS preserved on the exception
+    assert http.request.call_count == 2
+    assert wc.last_failed is True
+    assert exc_info.value.response == {"error": "still broken"}
+
+
+async def test_request_retry_uses_fresh_token_after_reauth():
+    # The retry must carry the token obtained by re-auth, not the stale one
+    # from the failed attempt (regression test: the old header merge let the
+    # stale Authorization win, so token-invalidation 401s could never recover).
+    from wolf_comm.token_auth import Tokens
+
+    wc, http = make_authorized_client(
+        httpx.Response(401, json={}),
+        ok([{"Id": 1, "GatewayId": 2, "Name": "Home"}]),
+    )
+
+    async def reauth():
+        wc.tokens = Tokens("fresh-token", 3600)
+        wc.session_id = 2
+
+    wc._WolfClient__authorize_and_session = AsyncMock(side_effect=reauth)
+
+    await wc.fetch_system_list()
+
+    first_headers = http.request.call_args_list[0].kwargs["headers"]
+    retry_headers = http.request.call_args_list[1].kwargs["headers"]
+    assert first_headers["Authorization"] == "Bearer test-token"
+    assert retry_headers["Authorization"] == "Bearer fresh-token"
 
 
 GUI_DESC = {
@@ -526,11 +640,50 @@ def test_map_all_descriptors_without_exceptions(fixture_name, min_temps, min_lis
 
     assert len(temperatures) > min_temps
     assert len(list_params) > min_lists
-    # Known limitation: fixtures contain units the mapper does not recognize
-    # (Uhr, min, K, m³/h, ppm, Pa, V, ...), which currently map to None and
-    # get dropped.
+    # Intentional: fixtures contain units the mapper does not recognize
+    # (Uhr, min, K, m³/h, ppm, Pa, V, ...), which map to None and get
+    # dropped by design.
     assert dropped, "expected some unrecognized-unit descriptors in real data"
     assert all("Unit" in d for d in dropped)
+
+
+@pytest.mark.parametrize("fixture_name", ["gas_desc", "gashybrid_desc", "heatpump_desc", "luftung_desc"])
+def test_expert_mode_bundle_stamping_on_all_fixtures(fixture_name, request):
+    """Expert-mode pipeline: every descriptor gets a real int BundleId from its
+    enclosing TabView, so fetch_value's per-bundle batching produces one
+    request per bundle with no None/str keys."""
+    desc = request.getfixturevalue(fixture_name)
+    descriptors = WolfClient._extract_parameter_descriptors(desc)
+    descriptors.sort(key=lambda d: d["ValueId"])
+
+    # every ParameterDescriptors parent in the real data is a TabView with a BundleId
+    assert all(isinstance(d.get("BundleId"), int) for d in descriptors)
+
+    params = [p for p in (WolfClient._map_parameter(d, None) for d in descriptors) if p is not None]
+    seen, deduped = set(), []
+    for p in params:
+        if p.value_id not in seen:
+            seen.add(p.value_id)
+            deduped.append(p)
+
+    # replicate fetch_value's grouping: each surviving param lands in exactly
+    # one int-keyed bundle, so one GetParameterValues request per bundle
+    bundles = {}
+    for p in deduped:
+        bundles.setdefault(p.bundle_id, []).append(p.value_id)
+    assert all(isinstance(b, int) for b in bundles)
+    assert len(bundles) > 1, "expert mode should span multiple bundles"
+    assert sum(len(v) for v in bundles.values()) == len(deduped)
+
+
+def test_gashybrid_wh_energy_descriptors_map_to_energy_wh_parameter(gashybrid_desc):
+    descriptors = WolfClient._extract_parameter_descriptors(gashybrid_desc)
+    wh_descriptors = [d for d in descriptors if d.get("Unit") in ("Wh;kWh", "Wh;kWh;MWh")]
+    assert wh_descriptors, "fixture should contain Wh-based energy descriptors"
+
+    mapped = [WolfClient._map_parameter(d, "Test") for d in wh_descriptors]
+    assert all(isinstance(p, EnergyWhParameter) for p in mapped)
+    assert all(p.unit == "kWh" for p in mapped)
 
 
 def test_map_view_svg_unit_injection_on_gas_fixture(gas_desc):

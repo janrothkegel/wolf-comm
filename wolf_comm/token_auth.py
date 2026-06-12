@@ -6,11 +6,36 @@ from httpx import AsyncClient
 from wolf_comm import constants
 
 from lxml import html
+from lxml.etree import ParserError
 import pkce
 import shortuuid
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _extract_verification_token(page_text: str):
+    """Pull the anti-forgery token out of the login page HTML.
+
+    Targets the input by name instead of position: on the live page the
+    username/password inputs are wrapped in divs while the hidden token
+    inputs are direct form children, so a positional '//form/input' lookup
+    only works by accident of the current markup. The page contains two
+    forms, each carrying the same per-response token, so taking the first
+    match is correct. Returns None when the page is empty/unparseable or
+    carries no usable token (missing field or empty value) — all signs of a
+    rate-limited or degraded portal rather than a real login page.
+    """
+    if not page_text or not page_text.strip():
+        return None
+    try:
+        tree = html.document_fromstring(page_text)
+    except ParserError:
+        return None
+    elements = tree.xpath(f'//input[@name="{constants.REQUEST_VERIFICATION_TOKEN}"]/@value')
+    if not elements:
+        return None
+    return elements[0] or None
 
 
 class Tokens:
@@ -58,20 +83,17 @@ class TokenAuth:
 
             _LOGGER.debug('Verification code response: %s', r.content)
 
-            tree = html.document_fromstring(r.text)
-            elements = tree.xpath('//form/input/@value')
+            verification_token = _extract_verification_token(r.text)
 
-            if elements:
+            if verification_token is not None:
 
-                _LOGGER.debug('Verification token: %s', elements[0])
-
-                verification_token = elements[0]  # __RequestVerificationToken
+                _LOGGER.debug('Verification token: %s', verification_token)
 
                 # Get code
                 login_data = {
                     "Input.Username": self.username,
                     "Input.Password": self.password,
-                    "__RequestVerificationToken": verification_token
+                    constants.REQUEST_VERIFICATION_TOKEN: verification_token
                 }
 
                 r = await client.post(
@@ -132,14 +154,27 @@ class TokenAuth:
                 _LOGGER.info('Successfully authenticated')
                 return Tokens(json.get("access_token"), json.get("expires_in"))
             else:
-                raise InvalidAuth
+                _LOGGER.error('No verification token on the login page; '
+                              'portal is rate-limiting or unavailable')
+                raise PortalUnavailable
+        except InvalidAuth:
+            raise
         except Exception as e:
             _LOGGER.error('An error occurred: %s', e)
-            raise InvalidAuth
+            raise InvalidAuth from e
 
 
 class InvalidAuth(Exception):
     """Please check whether you entered an invalid username or password. If everything looks fine then probably there is an issue with Wolf SmartSet servers."""
+    pass
+
+
+class PortalUnavailable(InvalidAuth):
+    """The login page did not contain the verification token — the portal is
+    rate-limiting, in maintenance, or serving an error page. Credentials were
+    never submitted; retry later instead of re-authenticating. Subclasses
+    InvalidAuth so existing handlers keep working; catch this first to
+    distinguish portal trouble from genuinely wrong credentials."""
     pass
 
 

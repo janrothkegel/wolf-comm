@@ -60,6 +60,12 @@ class Parameter(ABC):
             self.parent
         )
 
+    def convert_raw_value(self, value: str) -> str:
+        """Hook for converting a raw GetParameterValues reading into the unit
+        this parameter reports. Identity by default; subclasses whose raw API
+        value uses a different scale (e.g. EnergyWhParameter) override it."""
+        return value
+
 
 class SimpleParameter(Parameter):
     @property
@@ -390,6 +396,21 @@ class EnergyParameter(UnitParameter):
         self._parameter_id = parameter_id
         self._bundle_id = bundle_id
         self._read_only = read_only
+
+
+class EnergyWhParameter(EnergyParameter):
+    """Energy parameter whose raw API value is in Wh ('Wh;kWh' / 'Wh;kWh;MWh' units).
+
+    Reported as a standard EnergyParameter in kWh; convert_raw_value turns
+    the raw Wh reading into kWh.
+    """
+
+    def convert_raw_value(self, value: str) -> str:
+        try:
+            return str(round(float(value) / 1000, 3))
+        except (TypeError, ValueError):
+            # non-numeric placeholder (e.g. '--'); pass through untouched
+            return value
 
 
 class RPMParameter(UnitParameter):
