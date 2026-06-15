@@ -29,7 +29,13 @@ def test_device_attributes_and_str():
     assert device.id == 5
     assert device.gateway == 7
     assert device.name == "Home"
+    assert device.system_share_id is None
     assert str(device) == "Name: Home, Id: 5, Gateway 7"
+
+
+def test_device_with_system_share_id():
+    device = Device(23484, 18216, "Shared", 63840)
+    assert device.system_share_id == 63840
 
 
 @pytest.mark.parametrize(

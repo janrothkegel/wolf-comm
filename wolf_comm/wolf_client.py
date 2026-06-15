@@ -12,7 +12,7 @@ from wolf_comm.constants import BASE_URL, BASE_URL_PORTAL, ID, GATEWAY_ID, NAME,
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, RPM, FLOW, FREQUENCY, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
     WATTHOURS_KILOWATTHOURS, WATTHOURS_KILOWATTHOURS_MEGAWATTHOURS, \
-    LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES, ISREADONLY
+    LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, SYSTEM_SHARE_ID, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES, ISREADONLY
 from wolf_comm.create_session import create_session, update_session
 from wolf_comm.helpers import bearer_header
 from wolf_comm.models import Temperature, Parameter, SimpleParameter, Device, Pressure, ListItemParameter, \
@@ -147,15 +147,19 @@ class WolfClient:
         system_list = await self.__request("get", "api/portal/GetSystemList")
         _LOGGER.debug("Fetched systems: %s", system_list)
         return [
-            Device(system[ID], system[GATEWAY_ID], system[NAME])
+            Device(system[ID], system[GATEWAY_ID], system[NAME], system.get(SYSTEM_SHARE_ID))
             for system in system_list
         ]
 
     # api/portal/GetSystemStateList
-    async def fetch_system_state_list(self, system_id, gateway_id) -> bool:
+    async def fetch_system_state_list(self, system_id, gateway_id, system_share_id=None) -> bool:
+        system_entry = {SYSTEM_ID: system_id, GATEWAY_ID: gateway_id}
+        # shared/foreign systems only resolve when their SystemShareId is sent
+        if system_share_id is not None:
+            system_entry[SYSTEM_SHARE_ID] = system_share_id
         payload = {
             SESSION_ID: self.session_id,
-            SYSTEM_LIST: [{SYSTEM_ID: system_id, GATEWAY_ID: gateway_id}],
+            SYSTEM_LIST: [system_entry],
         }
         system_state_response = await self.__request(
             "post", "api/portal/GetSystemStateList", json=payload

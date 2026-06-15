@@ -400,9 +400,20 @@ async def test_fetch_system_list():
     devices = await wc.fetch_system_list()
     assert len(devices) == 1
     assert (devices[0].id, devices[0].gateway, devices[0].name) == (5, 7, "Home")
+    # owned system: no SystemShareId in the response
+    assert devices[0].system_share_id is None
     method, url = http.request.call_args.args[:2]
     assert method == "get"
     assert url.endswith("api/portal/GetSystemList")
+
+
+async def test_fetch_system_list_captures_system_share_id():
+    # shared/foreign systems carry a SystemShareId that must be retained
+    wc, _ = make_authorized_client(
+        ok([{"Id": 23484, "GatewayId": 18216, "Name": "Shared", "SystemShareId": 63840}])
+    )
+    devices = await wc.fetch_system_list()
+    assert devices[0].system_share_id == 63840
 
 
 async def test_fetch_system_state_list():
@@ -411,9 +422,21 @@ async def test_fetch_system_state_list():
     )
     assert await wc.fetch_system_state_list(5, 7) is True
     payload = http.request.call_args.kwargs["json"]
+    # owned system: no SystemShareId sent
     assert payload["SystemList"] == [{"SystemId": 5, "GatewayId": 7}]
     # __request injects the session id into every JSON payload.
     assert payload["SessionId"] == 1
+
+
+async def test_fetch_system_state_list_includes_system_share_id_for_shared():
+    wc, http = make_authorized_client(
+        ok([{"GatewayState": {"IsOnline": True}}])
+    )
+    assert await wc.fetch_system_state_list(23484, 18216, 63840) is True
+    payload = http.request.call_args.kwargs["json"]
+    assert payload["SystemList"] == [
+        {"SystemId": 23484, "GatewayId": 18216, "SystemShareId": 63840}
+    ]
 
 
 async def test_fetch_value_batches_by_bundle_id():

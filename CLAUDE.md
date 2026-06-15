@@ -60,7 +60,7 @@ from wolf_comm import WolfClient
 
 client = WolfClient("username", "password")        # optional: expert_p=, region=, client=, client_lambda=
 devices = await client.fetch_system_list()          # list[Device]  (auth + session created lazily here)
-online  = await client.fetch_system_state_list(device.id, device.gateway)   # bool
+online  = await client.fetch_system_state_list(device.id, device.gateway, device.system_share_id)  # bool
 params  = await client.fetch_parameters(device.gateway, device.id)          # list[Parameter]
 values  = await client.fetch_value(device.gateway, device.id, params)       # list[Value]
 await client.write_value(device.gateway, device.id, bundle_id, {...})       # change a parameter
@@ -162,7 +162,7 @@ WolfClient(username, password, expert_p=None, region=None, client=None, client_l
 | Method | HTTP call | Returns |
 |---|---|---|
 | `fetch_system_list()` | `GET api/portal/GetSystemList` | `list[Device]` |
-| `fetch_system_state_list(system_id, gateway_id)` | `POST api/portal/GetSystemStateList` | `bool` (`[0].GatewayState.IsOnline`) |
+| `fetch_system_state_list(system_id, gateway_id, system_share_id=None)` | `POST api/portal/GetSystemStateList` | `bool` (`[0].GatewayState.IsOnline`) |
 | `fetch_parameters(gateway_id, system_id)` | `GET api/portal/GetGuiDescriptionForGateway` | `list[Parameter]` |
 | `fetch_value(gateway_id, system_id, parameters)` | `POST api/portal/GetParameterValues` (batched per bundle) | `list[Value]` |
 | `write_value(gateway_id, system_id, bundle_id, value)` | `POST api/portal/WriteParameterValues` | `dict` |
@@ -219,7 +219,10 @@ a misleading re-auth prompt) and `PasswordToLong`.
 ## 5. Parameter model & mapping ([models.py](wolf_comm/models.py))
 
 ### `Device`
-`Device(id, gateway, name)` — one heating system. `id` ⇒ `SystemId`, `gateway` ⇒ `GatewayId`.
+`Device(id, gateway, name, system_share_id=None)` — one heating system. `id` ⇒ `SystemId`,
+`gateway` ⇒ `GatewayId`. `system_share_id` (⇒ `SystemShareId`) is only populated for
+**shared/foreign** systems (`None` for ones the user owns) and must be passed to
+`fetch_system_state_list` for those systems to resolve — see §4.
 
 ### `Parameter` (ABC) and subclasses
 Every parameter exposes: `value_id` (get/set), `name` (get/set), `parameter_id`, `bundle_id`,

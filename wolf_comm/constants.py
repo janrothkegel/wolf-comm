@@ -29,6 +29,10 @@ ID = 'Id'
 
 SYSTEM_ID = 'SystemId'
 
+# only present for shared/foreign systems; required in the GetSystemStateList
+# payload for them, null/absent for systems the user owns
+SYSTEM_SHARE_ID = 'SystemShareId'
+
 TAB_VIEWS = 'TabViews'
 
 MENU_ITEMS = 'MenuItems'

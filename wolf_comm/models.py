@@ -3,10 +3,13 @@ from abc import ABC, abstractmethod
 
 class Device:
 
-    def __init__(self, device_id: int, gateway: int, name: str):
+    def __init__(self, device_id: int, gateway: int, name: str, system_share_id: int | None = None):
         self.id = device_id
         self.gateway = gateway
         self.name = name
+        # only set for shared/foreign systems; needed in the GetSystemStateList
+        # payload for them (None for systems the user owns)
+        self.system_share_id = system_share_id
 
     def __str__(self) -> str:
         return 'Name: {}, Id: {}, Gateway {}'.format(self.name, self.id, self.gateway)
