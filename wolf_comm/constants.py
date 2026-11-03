@@ -108,3 +108,19 @@ GATEWAY_STATE = 'GatewayState'
 IS_ONLINE = 'IsOnline'
 
 WRITE_PARAMETER_VALUES = 'WriteParameterValues'
+
+CHILD_PARAMETER_DESCRIPTORS = 'ChildParameterDescriptors'
+
+# stamped by WolfClient onto nested descriptors: the " > "-joined names of the
+# enclosing descriptors (e.g. "Zeitprogramm > Zeitprogramm 1")
+CHILD_OF = 'ChildOf'
+
+CONTROL_TYPE = 'ControlType'
+
+# ControlTypes of nested descriptors that carry no (usable) Unit
+CONTROL_TYPE_DATE = 9
+
+CONTROL_TYPE_TIME = 10
+
+# one weekday of a heating/hot water/circulation time program ("Unit": "Uhr")
+CONTROL_TYPE_TIME_PROGRAM = 14

@@ -407,8 +407,25 @@ Two top-level menus in every example: **`Benutzer`** (user) and **`Fachmann`** (
 \* Counts marked `~` are total `'ValueId'` key occurrences anywhere in the file (slightly higher
 than descriptor counts since nested structures also carry ValueIds). Note that
 `_extract_parameter_descriptors` collects fewer than these totals — it only visits arrays keyed
-exactly `ParameterDescriptors` (e.g. 226 of the 442 in the gas fixture); `ChildParameterDescriptors`
-and `SchemaTabViewConfigDTO>Configs>Parameters` (where the heat pump's `Hz` params live) are skipped.
+exactly `ParameterDescriptors` (e.g. 226 of the 442 in the gas fixture) plus their nested
+`ChildParameterDescriptors` (see below); `SchemaTabViewConfigDTO>Configs>Parameters` (where the
+heat pump's `Hz` params live) is skipped.
+
+### Nested `ChildParameterDescriptors`
+Time programs and the party/holiday date and time settings are not top-level descriptors: they sit
+under `ChildParameterDescriptors` of a parent (e.g. `Zeitprogramm` → `Zeitprogramm 1` → `Mo`…`So`).
+`WolfClient._with_children` yields each descriptor followed by its nested ones (container entries
+with `ValueId` 0 are skipped), stamping `ChildOf` (e.g. `"Zeitprogramm > Zeitprogramm 1"`; becomes
+`Parameter.parent`) and, in expert mode, the enclosing `BundleId`. Standard and expert mode both use it.
+`_map_parameter` types descriptors that carry `ChildOf` by `ControlType`:
+`14` → `TimeProgramParameter` (despite `Unit` `Uhr`), `9` → `DateParameter`, `10` → `TimeParameter`.
+These extend `ClockParameter(Parameter)`, deliberately **not** `SimpleParameter`, so consumers that
+only handle the known types do not suddenly get dozens of new entities. Top-level descriptors are
+unaffected. Other nested descriptors fall through to the normal unit mapping (e.g. the gas hybrid's
+monthly solar yields, ControlType 16 with unit `Wh;kWh;MWh`, now become `EnergyWhParameter`).
+The time program value is `HH:MM-HH:MM` windows joined by `;` (5 per day, unused ones
+`00:00-00:00`); `TimeProgramParameter.parse` / `.format` convert it, and `write_value` takes the
+formatted string as `State`.
 
 > Practical takeaway: the gas files exercise the common path; **`luftung.json` is the best stress
 > test** for unrecognized units (`m³/h`, `ppm`, `Pa`, `V`) that currently map to `None`.
