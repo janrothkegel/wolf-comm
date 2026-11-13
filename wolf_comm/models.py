@@ -625,6 +625,90 @@ class ListItemParameter(Parameter):
         return super().__str__() + " items: " + ", ".join([item.__str__() for item in self.items])
 
 
+class ClockParameter(Parameter, ABC):
+    """Base for date/time/time-program values. Only produced for nested
+    (ChildParameterDescriptors) descriptors; the value stays the raw string."""
+
+    @property
+    def parameter_id(self):
+        return self._parameter_id
+
+    @property
+    def value_id(self):
+        return self._value_id
+
+    @value_id.setter
+    def value_id(self, value_id: int):
+        self._value_id = value_id
+
+    @property
+    def bundle_id(self):
+        return self._bundle_id
+
+    @property
+    def read_only(self):
+        return self._read_only
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name: str):
+        self._name = name
+
+    @property
+    def parent(self):
+        return self._parent
+
+    def __init__(self, value_id: int, name: str, parent: str, parameter_id: int, bundle_id: int, read_only: bool):
+        self._value_id = value_id
+        self._name = name
+        self._parent = parent
+        self._parameter_id = parameter_id
+        self._bundle_id = bundle_id
+        self._read_only = read_only
+
+
+class DateParameter(ClockParameter):
+    """A date such as "03.06.2026" (party/holiday mode start and end)."""
+
+
+class TimeParameter(ClockParameter):
+    """A time of day such as "19:06" (party/holiday mode start and end)."""
+
+
+class TimeProgramParameter(ClockParameter):
+    """One weekday of a time program.
+
+    The value is up to ``MAX_WINDOWS`` windows joined by ``;``, each
+    ``HH:MM-HH:MM``; unused windows are ``00:00-00:00``, e.g.
+    ``05:00-19:30;00:00-00:00;00:00-00:00;00:00-00:00;00:00-00:00``.
+    """
+
+    MAX_WINDOWS = 5
+    EMPTY_WINDOW = "00:00-00:00"
+
+    @staticmethod
+    def parse(value: str) -> list[tuple[str, str]]:
+        """Raw value -> the active (start, end) windows, unused ones dropped."""
+        windows = []
+        for window in value.split(";"):
+            if window and window != TimeProgramParameter.EMPTY_WINDOW:
+                start, end = window.split("-")
+                windows.append((start, end))
+        return windows
+
+    @staticmethod
+    def format(windows: list[tuple[str, str]]) -> str:
+        """Active (start, end) windows -> the raw value to pass to write_value."""
+        if len(windows) > TimeProgramParameter.MAX_WINDOWS:
+            raise ValueError("at most %d windows per day" % TimeProgramParameter.MAX_WINDOWS)
+        parts = ["%s-%s" % window for window in windows]
+        parts += [TimeProgramParameter.EMPTY_WINDOW] * (TimeProgramParameter.MAX_WINDOWS - len(parts))
+        return ";".join(parts)
+
+
 class Value:
 
     def __init__(self, value_id: int, value: str, state: str):

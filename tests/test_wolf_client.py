@@ -722,8 +722,8 @@ def test_all_fixtures_are_valid_json(name):
 
 def test_extract_descriptors_from_gas_fixture(gas_desc):
     descriptors = WolfClient._extract_parameter_descriptors(gas_desc)
-    # Only arrays keyed exactly 'ParameterDescriptors' are collected (226 in
-    # this fixture); ChildParameterDescriptors etc. are intentionally not.
+    # Arrays keyed 'ParameterDescriptors' (226 in this fixture) plus their nested
+    # ChildParameterDescriptors with a non-zero ValueId.
     assert len(descriptors) > 200
     assert all("ValueId" in d for d in descriptors)
     # BundleId stamping must have run on every extracted descriptor.

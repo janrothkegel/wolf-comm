@@ -12,12 +12,13 @@ from wolf_comm.constants import BASE_URL, BASE_URL_PORTAL, ID, GATEWAY_ID, NAME,
     BUNDLE, VALUE_ID_LIST, GUI_ID_CHANGED, SESSION_ID, VALUE_ID, GROUP, VALUE, STATE, VALUES, PARAMETER_ID, UNIT, \
     CELSIUS_TEMPERATURE, BAR, RPM, FLOW, FREQUENCY, PERCENTAGE, LIST_ITEMS, DISPLAY_TEXT, PARAMETER_DESCRIPTORS, TAB_NAME, HOUR, KILOWATT, KILOWATTHOURS, \
     WATTHOURS_KILOWATTHOURS, WATTHOURS_KILOWATTHOURS_MEGAWATTHOURS, \
-    LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, SYSTEM_SHARE_ID, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES, ISREADONLY
+    LAST_ACCESS, ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE, ERROR_READ_PARAMETER, SYSTEM_LIST, SYSTEM_SHARE_ID, GATEWAY_STATE, IS_ONLINE, WRITE_PARAMETER_VALUES, ISREADONLY, \
+    CHILD_PARAMETER_DESCRIPTORS, CHILD_OF, CONTROL_TYPE, CONTROL_TYPE_DATE, CONTROL_TYPE_TIME, CONTROL_TYPE_TIME_PROGRAM
 from wolf_comm.create_session import create_session, update_session
 from wolf_comm.helpers import bearer_header
 from wolf_comm.models import Temperature, Parameter, SimpleParameter, Device, Pressure, ListItemParameter, \
     PercentageParameter, Value, ListItem, HoursParameter, PowerParameter, EnergyParameter, EnergyWhParameter, \
-    RPMParameter, FlowParameter, FrequencyParameter
+    RPMParameter, FlowParameter, FrequencyParameter, DateParameter, TimeParameter, TimeProgramParameter
 from wolf_comm.token_auth import Tokens, TokenAuth
 
 _LOGGER = logging.getLogger(__name__)
@@ -403,6 +404,18 @@ class WolfClient:
         bundle_id = parameter.get(BUNDLE_ID, 1000)
         readonly = parameter.get(ISREADONLY, True)
 
+        if CHILD_OF in parameter:
+            # nested descriptor (time program days, party/holiday dates and
+            # times): typed by ControlType, since its Unit is "Uhr" or absent
+            parent = parameter[CHILD_OF]
+            control_type = parameter.get(CONTROL_TYPE)
+            if control_type == CONTROL_TYPE_TIME_PROGRAM:
+                return TimeProgramParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
+            elif control_type == CONTROL_TYPE_DATE:
+                return DateParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
+            elif control_type == CONTROL_TYPE_TIME:
+                return TimeParameter(value_id, name, parent, parameter_id, bundle_id, readonly)
+
         if UNIT in parameter:
             unit = parameter[UNIT]
             if unit == CELSIUS_TEMPERATURE:
@@ -451,8 +464,30 @@ class WolfClient:
         else:
             return [
                 WolfClient._map_parameter(p, view[TAB_NAME])
-                for p in view[PARAMETER_DESCRIPTORS]
+                for p in WolfClient._with_children(view[PARAMETER_DESCRIPTORS])
             ]
+
+    @staticmethod
+    def _with_children(descriptors, bundle_id=None):
+        # yields each descriptor followed by its nested ChildParameterDescriptors
+        # (time program days, party/holiday dates and times). Children are
+        # stamped with CHILD_OF (the names of the enclosing descriptors) and,
+        # when known, the enclosing BundleId. Container entries (ValueId 0)
+        # only carry a name and more children; they are not yielded.
+        def children(descriptor, label):
+            for child in descriptor.get(CHILD_PARAMETER_DESCRIPTORS, []):
+                if child[VALUE_ID]:
+                    if bundle_id is not None:
+                        child.setdefault(BUNDLE_ID, bundle_id)
+                    child[CHILD_OF] = label
+                    yield child
+                    yield from children(child, label)
+                else:
+                    yield from children(child, label + " > " + child[NAME])
+
+        for descriptor in descriptors:
+            yield descriptor
+            yield from children(descriptor, descriptor[NAME])
 
     @staticmethod
     def _extract_parameter_descriptors(desc):
@@ -474,7 +509,7 @@ class WolfClient:
                         if bundleId is not None:
                             for descriptor in item[key]:
                                 descriptor["BundleId"] = bundleId
-                        yield from item[key]
+                        yield from WolfClient._with_children(item[key], bundleId)
                     yield from traverse(item[key], path + key + '>', bundleId)
 
             # Object is a list, crawl list items
